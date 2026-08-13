@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+.dockerignore
+docker-compose.yml
+screenshots
+.env
+.env.local
+.env*.local
+CLAUDE.md
+PLAN.md
+PROGRESS.md

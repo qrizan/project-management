@@ -43,3 +43,6 @@ next-env.d.ts
 CLAUDE.md
 PLAN.md
 PROGRESS.md
+
+# docker
+docker-compose.override.yml

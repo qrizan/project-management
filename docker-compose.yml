@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: project-management-app
+    environment:
+      DATABASE_URL: postgresql://johndoe:randompassword@db:5432/mydb?schema=public
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: project-management-migrate
+    environment:
+      DATABASE_URL: postgresql://johndoe:randompassword@db:5432/mydb?schema=public
+      CHECKPOINT_DISABLE: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["tools"]
+    command: ["bunx", "prisma", "migrate", "deploy"]
+
+  db:
+    image: postgres:16
+    container_name: project-management-db
+    environment:
+      POSTGRES_USER: johndoe
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - project-management-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U johndoe -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  project-management-pgdata:
