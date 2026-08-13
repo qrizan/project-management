@@ -7,9 +7,7 @@
 | NextJS    | https://nextjs.org         |
 | Prisma    | https://www.prisma.io      |
 | Flowbite  | https://flowbite-react.com |
-| Supabase  | https://supabase.com       |
 | Puppeteer | https://pptr.dev           |
-| etc       |                            |
 
 #### users diagram
 
@@ -17,19 +15,10 @@
 
 ## setup
 
-#### tested on
+#### requirements
 
-```
-rizan@linux ~/Projects/nextjs-prisma-supabase $ node --version
-v20.13.0
-rizan@linux ~/Projects/nextjs-prisma-supabase $
-```
-
-```
-rizan@linux ~/Projects/nextjs-prisma-supabase $ bun --version
-1.1.9
-rizan@linux ~/Projects/nextjs-prisma-supabase $
-```
+- bun 1.3.14
+- PostgreSQL yang bisa diakses lewat `DATABASE_URL`
 
 #### install dependencies
 
@@ -40,12 +29,23 @@ bun install
 #### copy .env
 
 ```
-copy .env.example .env
+cp .env.example .env
 ```
 
-#### create database
+#### database (PostgreSQL)
 
-> https://supabase.com/docs/guides/database/overview
+Contoh menjalankan PostgreSQL lokal lewat Docker:
+
+```
+docker run -d --name pg-project-management \
+  -e POSTGRES_USER=johndoe \
+  -e POSTGRES_PASSWORD=randompassword \
+  -e POSTGRES_DB=mydb \
+  -p 5432:5432 \
+  postgres:16
+```
+
+Sesuaikan `DATABASE_URL` di `.env` dengan kredensial yang dipakai.
 
 #### generate NEXTAUTH_SECRET
 
@@ -74,7 +74,7 @@ bunx prisma migrate dev --name init
 
 > data/SQL.txt
 
-#### runnning
+#### running
 
 ```
 bun --watch run dev
@@ -93,6 +93,7 @@ const heightResolution = 960;
 ```
 
 ```
+mkdir -p screenshots/test
 bunx ts-node scripts/test.ts
 ```
 
@@ -103,7 +104,3 @@ bunx ts-node scripts/test.ts
 ![projects-list](screenshots/projects-list.png)
 
 ![project-detail](screenshots/project-detail.png)
-
-### demo
-
-https://nextjs-prisma-supabase-lake.vercel.app/

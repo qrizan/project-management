@@ -36,8 +36,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# migrate
-/prisma/migrations
-
 # test
 /screenshots/test
+
+# dokumentasi internal
+CLAUDE.md
+PLAN.md
+PROGRESS.md
