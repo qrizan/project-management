@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: project-management
+spec:
+  # `replicas` sengaja tidak diset: field ini dikendalikan HorizontalPodAutoscaler.
+  # Kalau ditulis di sini, setiap `kubectl apply` akan mengembalikan jumlah replica
+  # ke angka statis dan membatalkan hasil penskalaan.
+  selector:
+    matchLabels:
+      app: project-management
+  template:
+    metadata:
+      labels:
+        app: project-management
+        # Dipakai NetworkPolicy untuk mengizinkan akses ke Postgres. Label ini
+        # terpisah dari `app` supaya Job yang juga perlu ke Postgres tidak ikut
+        # terseleksi Service.
+        postgres-client: "true"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: app
+        image: project-management-app:runner
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: postgres-app
+              key: uri
+        - name: NEXTAUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: NEXTAUTH_SECRET
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: next-cache
+          mountPath: /app/.next/cache
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /auth/signin
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /auth/signin
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 15
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: next-cache
+        emptyDir: {}

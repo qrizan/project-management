@@ -1,0 +1,38 @@
+# Cluster sekali pakai untuk membuktikan backup benar-benar bisa dipulihkan.
+# Dibuat dari backup yang sama dengan `postgres`, lalu jumlah barisnya
+# dibandingkan dengan sumbernya.
+#
+# Sengaja TIDAK memuat `.spec.plugins`: tanpa blok itu cluster hasil restore
+# tidak ikut mengarsip WAL. Kalau diaktifkan, cluster ini mulai menulis ke
+# object storage begitu jadi primary, dan sisa arsip itu membuat uji restore
+# berikutnya dengan nama yang sama ditolak ("Expected empty archive") — padahal
+# cluster pembanding tidak pernah butuh mengarsip apa pun.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-restore-test
+  namespace: project-management
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
+  storage:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  bootstrap:
+    recovery:
+      source: postgres-backup-source
+  externalClusters:
+  - name: postgres-backup-source
+    plugin:
+      name: barman-cloud.cloudnative-pg.io
+      parameters:
+        barmanObjectName: cnpg-backup-store
+        # Arsip diberi nama mengikuti nama Cluster sumber, bukan nama Cluster
+        # yang sedang dipulihkan.
+        serverName: postgres

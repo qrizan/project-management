@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: garage-config
+  namespace: garage
+data:
+  garage.toml: |
+    metadata_dir = "/var/lib/garage/meta"
+    data_dir = "/var/lib/garage/data"
+    db_engine = "sqlite"
+
+    replication_factor = 1
+
+    rpc_bind_addr = "[::]:3901"
+    rpc_public_addr = "garage-0.garage-rpc.garage.svc.cluster.local:3901"
+
+    # rpc_secret sengaja tidak ditulis di sini. Nilainya disuntik lewat env
+    # GARAGE_RPC_SECRET supaya tidak perlu file rahasia di dalam container:
+    # Garage menolak start kalau file rahasianya bisa dibaca selain pemiliknya,
+    # sementara volume Secret dimiliki root — tidak terbaca oleh proses non-root.
+
+    [s3_api]
+    # Garage bukan AWS, jadi region harus diset eksplisit. Client S3 memakai
+    # nilai ini saat menghitung signature; kalau tidak cocok, request ditolak
+    # dengan 400 tanpa keterangan region sama sekali.
+    s3_region = "garage"
+    api_bind_addr = "[::]:3900"
+
+    [admin]
+    api_bind_addr = "[::]:3903"
+    # admin_token disuntik lewat env GARAGE_ADMIN_TOKEN. Port ini tidak
+    # dipublikasikan lewat Service — hanya dijangkau lewat port-forward saat
+    # inspeksi manual.

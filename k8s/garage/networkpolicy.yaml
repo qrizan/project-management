@@ -1,0 +1,43 @@
+# Tanpa policy default-deny, Pod yang tidak diseleksi policy mana pun menerima
+# trafik dari seluruh cluster. Policy ini menutup namespace lebih dulu, lalu
+# akses yang memang dibutuhkan dibuka satu per satu di bawah.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: garage
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+---
+# Yang perlu menjangkau S3 API adalah Pod milik CloudNativePG: instance yang
+# menulis WAL dan base backup, serta Pod pemulihan yang membacanya kembali.
+#
+# Diseleksi lewat keberadaan kunci label `cnpg.io/cluster`, bukan nilainya.
+# Cluster hasil uji restore memakai nama berbeda dari cluster sumber, sehingga
+# aturan yang mematok satu nama akan memblokir pemulihan — dan gejalanya berupa
+# Cluster yang menggantung tanpa menyebut jaringan sama sekali.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: garage-allow-postgres
+  namespace: garage
+spec:
+  podSelector:
+    matchLabels:
+      app: garage
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: project-management
+      podSelector:
+        matchExpressions:
+        - key: cnpg.io/cluster
+          operator: Exists
+    ports:
+    - protocol: TCP
+      port: 3900

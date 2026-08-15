@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: garage
+  namespace: garage
+spec:
+  serviceName: garage-rpc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: garage
+  template:
+    metadata:
+      labels:
+        app: garage
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        # PVC dibuat kosong dan dimiliki root; fsGroup membuatnya bisa ditulis
+        # oleh proses non-root tanpa initContainer chown.
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: garage
+        image: dxflrs/garage:v2.3.0
+        # Biner disebut eksplisit lewat `command`: image ini menaruh seluruh
+        # perintahnya di CMD tanpa ENTRYPOINT, sehingga mengisi `args` saja akan
+        # menggantikan CMD dan kubelet mencoba menjalankan "server" sebagai biner.
+        # Binernya sendiri ada di root, bukan di PATH.
+        command: ["/garage"]
+        # --single-node membuat layout cluster otomatis saat start; --default-bucket
+        # membuat bucket dan (implisit) access key dari env di bawah. Tanpa ini,
+        # layout/bucket/key harus dibuat lewat perintah manual setelah pod hidup dan
+        # kredensialnya harus disalin tangan — tidak bisa direproduksi.
+        args: ["server", "--single-node", "--default-bucket"]
+        env:
+        - name: GARAGE_CONFIG_FILE
+          value: /etc/garage/garage.toml
+        - name: GARAGE_RPC_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: garage-bootstrap
+              key: RPC_SECRET
+        - name: GARAGE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: garage-bootstrap
+              key: ADMIN_TOKEN
+        - name: GARAGE_DEFAULT_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: garage-bootstrap
+              key: ACCESS_KEY_ID
+        - name: GARAGE_DEFAULT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: garage-bootstrap
+              key: SECRET_ACCESS_KEY
+        - name: GARAGE_DEFAULT_BUCKET
+          value: cnpg-backups
+        ports:
+        - containerPort: 3900
+          name: s3-api
+        - containerPort: 3901
+          name: rpc
+        - containerPort: 3903
+          name: admin
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        # Probe memakai TCP, bukan endpoint /health di port admin: endpoint itu
+        # berada di balik admin_token, sehingga probe HTTP polos belum tentu
+        # diterima. Yang perlu dipastikan di sini memang cuma S3 API sudah
+        # menerima koneksi sebelum CNPG mulai mengarsip WAL.
+        readinessProbe:
+          tcpSocket:
+            port: 3900
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 3900
+          initialDelaySeconds: 20
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/garage/garage.toml
+          subPath: garage.toml
+        - name: meta
+          mountPath: /var/lib/garage/meta
+        - name: data
+          mountPath: /var/lib/garage/data
+      volumes:
+      - name: config
+        configMap:
+          name: garage-config
+  volumeClaimTemplates:
+  - metadata:
+      name: meta
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 200Mi
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 2Gi

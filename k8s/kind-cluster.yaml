@@ -1,0 +1,9 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: project-management
+nodes:
+- role: control-plane
+  # Node image dipatok eksplisit. Tanpa ini versi Kubernetes mengikuti default
+  # biner kind yang sedang terpasang, sehingga cluster hasil reproduksi bisa
+  # berbeda versi tanpa ada yang berubah di repo.
+  image: kindest/node:v1.36.1

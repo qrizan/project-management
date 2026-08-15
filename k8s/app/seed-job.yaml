@@ -1,0 +1,82 @@
+# Mengisi data contoh yang dipakai untuk membuktikan backup/restore memulihkan
+# isi yang benar. Sebelumnya langkah ini dijalankan manual lewat `kubectl exec`,
+# sehingga hasil uji restore tidak bisa dijalankan ulang oleh siapa pun.
+#
+# Isi seed datang dari ConfigMap `db-seed`, dibentuk dari file yang ada di repo
+# (`data/SQL.txt` dan `k8s/app/seed-user.sql`) — lihat script reproduce.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-seed
+  namespace: project-management
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        postgres-client: "true"
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: seed
+        # Image Postgres dipakai karena membawa `psql`; image aplikasi tidak.
+        image: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c"]
+        # Tiap bagian diperiksa sendiri sebelum dimuat, sehingga Job aman
+        # dijalankan ulang terhadap database yang sudah terisi sebagian.
+        args:
+        - |
+          set -euo pipefail
+
+          projects=$(psql "$DATABASE_URL" -tAc 'SELECT count(*) FROM "Project"')
+          if [ "$projects" = "0" ]; then
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f /seed/SQL.txt
+            echo "seed: data Category/Project dimuat"
+          else
+            echo "seed: Project sudah berisi $projects baris, dilewati"
+          fi
+
+          users=$(psql "$DATABASE_URL" -tAc 'SELECT count(*) FROM "User"')
+          if [ "$users" = "0" ]; then
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f /seed/seed-user.sql
+            echo "seed: user demo dimuat"
+          else
+            echo "seed: User sudah berisi $users baris, dilewati"
+          fi
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: postgres-app
+              key: uri
+        - name: HOME
+          value: /tmp
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        volumeMounts:
+        - name: seed
+          mountPath: /seed
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: seed
+        configMap:
+          name: db-seed
+      - name: tmp
+        emptyDir: {}

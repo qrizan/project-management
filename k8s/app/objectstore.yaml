@@ -1,0 +1,25 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: cnpg-backup-store
+  namespace: project-management
+spec:
+  # Recovery window: backup yang tidak lagi dibutuhkan untuk memulihkan ke titik
+  # mana pun dalam 30 hari terakhir akan dihapus. Belum diverifikasi berjalan di
+  # proyek ini — pembuktiannya butuh rentang waktu di luar jangkauan fase ini.
+  retentionPolicy: "30d"
+  configuration:
+    destinationPath: s3://cnpg-backups/
+    endpointURL: http://garage.garage.svc.cluster.local:3900
+    s3Credentials:
+      accessKeyId:
+        name: garage-s3-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: garage-s3-credentials
+        key: SECRET_ACCESS_KEY
+      # Garage memakai region non-AWS. Tanpa nilai ini signature request salah
+      # dan gagal dengan 400 yang tidak menyebut region sama sekali.
+      region:
+        name: garage-s3-credentials
+        key: REGION

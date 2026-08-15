@@ -1,0 +1,23 @@
+# metrics-server dipasang lewat kustomize, bukan `kubectl apply` lalu
+# `kubectl patch`: patch imperatif hanya hidup di cluster yang sedang berjalan
+# dan tidak ikut terbawa saat cluster dibangun ulang.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.0/components.yaml
+
+patches:
+# kubelet di node kind memakai sertifikat serving yang ditandatangani sendiri
+# dan tidak diterbitkan ulang oleh cluster CA, sehingga metrics-server menolak
+# koneksinya. Flag ini mematikan verifikasi sertifikat kubelet — pelonggaran
+# yang diterima karena lingkungannya lokal sekali pakai, bukan default yang
+# boleh dibawa ke lingkungan lain.
+- target:
+    kind: Deployment
+    name: metrics-server
+    namespace: kube-system
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --kubelet-insecure-tls
