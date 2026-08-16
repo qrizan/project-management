@@ -79,6 +79,68 @@ apply_secret() {
     --dry-run=client -o yaml | kc apply -f -
 }
 
+# Memasang atau memperbarui satu rilis Helm dari direktori chart di repo ini.
+# Selalu `upgrade --install` supaya perintah yang sama berlaku untuk pemasangan
+# pertama maupun pemasangan berikutnya.
+#
+# Penantian resource tetap dilakukan lewat `kubectl wait` di sisi pemanggil, bukan
+# digantungkan ke --wait milik Helm: nilai bawaannya hanya menunggu hook, dan
+# perilaku penantian custom resource pada pemasangan pertama lewat
+# `upgrade --install` berbeda dari `install` biasa.
+helm_release() {
+  local name="$1" chart="$2"
+  shift 2
+  helm --kube-context "${KUBE_CONTEXT}" upgrade --install "${name}" \
+    "${REPO_ROOT}/charts/${chart}" \
+    --namespace "${APP_NAMESPACE}" \
+    -f "${REPO_ROOT}/charts/${chart}/values-local.yaml" \
+    --timeout "${WAIT_LONG}" \
+    "$@"
+}
+
+# Mengambil satu nilai dari manifest hasil render chart. Dibaca dari hasil render,
+# bukan dari values, supaya nilai yang dipakai script dijamin sama dengan yang
+# benar-benar dikirim ke cluster — termasuk kalau nilainya ditimpa.
+helm_rendered_value() {
+  local chart="$1" key="$2"
+  shift 2
+  helm template render-only "${REPO_ROOT}/charts/${chart}" \
+    --namespace "${APP_NAMESPACE}" \
+    -f "${REPO_ROOT}/charts/${chart}/values-local.yaml" \
+    "$@" \
+    | awk -v key="${key}" '$1 == key { print $2; exit }'
+}
+
+# Alamat nyata di belakang Service `kubernetes`, beserta argumen yang menyalurkan
+# alamat itu ke chart database.
+#
+# Dibaca dari cluster karena nilainya berbeda tiap lingkungan dan API server tidak
+# punya Pod yang bisa diseleksi lewat label — satu-satunya cara menyebutnya di
+# NetworkPolicy adalah blok alamat. Alamat Service sendiri tidak berlaku: aturan
+# egress dievaluasi setelah alamat itu diterjemahkan ke alamat di belakangnya.
+#
+# Script yang memasang dan script yang memeriksa sama-sama memakai fungsi ini,
+# supaya keduanya merender chart dengan nilai yang persis sama.
+API_SERVER_ADDR=""
+API_SERVER_PORT=""
+DATABASE_VALUES_ARGS=()
+
+read_api_server_endpoint() {
+  API_SERVER_ADDR="$(kc get endpointslice kubernetes -n default \
+    -o jsonpath='{.endpoints[0].addresses[0]}')"
+  API_SERVER_PORT="$(kc get endpointslice kubernetes -n default \
+    -o jsonpath='{.ports[0].port}')"
+  [ -n "${API_SERVER_ADDR}" ] && [ -n "${API_SERVER_PORT}" ] \
+    || fail "alamat API server tidak terbaca dari EndpointSlice 'kubernetes'"
+  # Isinya dibaca oleh script yang men-source file ini, bukan di dalamnya —
+  # pemakaian di sisi pemanggil tidak terlihat oleh static checker.
+  # shellcheck disable=SC2034
+  DATABASE_VALUES_ARGS=(
+    --set "networkPolicy.egress.apiServer.cidr=${API_SERVER_ADDR}/32"
+    --set "networkPolicy.egress.apiServer.port=${API_SERVER_PORT}"
+  )
+}
+
 # `kubectl wait` pada Job yang gagal tetap menunggu sampai timeout habis, tanpa
 # menunjukkan apa pun tentang sebabnya. Log Job ikut dicetak supaya kegagalan
 # langsung bisa dibaca.
@@ -113,4 +175,63 @@ wait_cluster_ready() {
 require_cluster() {
   kind get clusters 2>/dev/null | grep -qx "${CLUSTER_NAME}" \
     || fail "cluster kind '${CLUSTER_NAME}' belum ada — jalankan 10-cluster.sh"
+}
+
+# Penghitung hasil untuk script pemeriksa. Seluruh pemeriksaan dijalankan sampai
+# habis walau ada yang gagal, supaya satu kali jalan memberi gambaran penuh;
+# jumlah kegagalan yang menentukan exit code di akhir.
+FAILED=0
+
+pass() { printf '  OK    %s\n' "$*"; }
+bad()  { printf '  GAGAL %s\n' "$*"; FAILED=$((FAILED + 1)); }
+
+check_eq() {
+  local label="$1" expected="$2" actual="$3"
+  if [ "${expected}" = "${actual}" ]; then
+    pass "${label} (${actual})"
+  else
+    bad "${label} — diharapkan '${expected}', dapat '${actual}'"
+  fi
+}
+
+# Menunggu alamat Gateway benar-benar melayani permintaan, bukan sekadar
+# berstatus Programmed. Condition itu menyatakan konfigurasi sudah direkonsiliasi;
+# proxy data-plane-nya sendiri masih dibangun beberapa saat sesudahnya, dan
+# permintaan pada jendela itu ditolak dengan koneksi terputus. Bedanya baru
+# terlihat pada Gateway yang baru dibuat ulang.
+#
+# Kode HTTP tidak diambil langsung dari keluaran curl: dengan -w, curl tetap
+# mencetak 000 sebelum keluar dengan status gagal, sehingga menambahkan penanda
+# lain di belakangnya menghasilkan nilai gabungan yang tidak berarti.
+gateway_http_code() {
+  local path="$1" timeout_secs="${2:-${WAIT_SHORT_SECS}}"
+  local deadline=$(( SECONDS + timeout_secs ))
+  local addr code=""
+  while [ "${SECONDS}" -lt "${deadline}" ]; do
+    addr="$(kc get gateway project-management -n "${APP_NAMESPACE}" \
+      -o jsonpath='{.status.addresses[0].value}' 2>/dev/null || true)"
+    if [ -n "${addr}" ]; then
+      if code="$(curl -fsS -o /dev/null -w '%{http_code}' --max-time 30 "http://${addr}${path}" 2>/dev/null)"; then
+        if [ "${code}" = "200" ]; then
+          echo "${code}"
+          return 0
+        fi
+      else
+        code=""
+      fi
+    fi
+    printf '  ... Gateway %s: %s\n' "${addr:-tanpa alamat}" "${code:-belum menjawab}" >&2
+    sleep 5
+  done
+  echo "${code:-gagal}"
+}
+
+# Menghitung baris satu tabel lewat instance primary sebuah Cluster CNPG.
+# `kubectl exec` di sini dipakai untuk membaca isi database, bukan sebagai bukti
+# konektivitas jaringan — jalurnya lewat API server, bukan jaringan antar Pod.
+psql_count() {
+  local cluster="$1" table="$2" primary
+  primary="$(kc get cluster "${cluster}" -n "${APP_NAMESPACE}" -o jsonpath='{.status.currentPrimary}')"
+  kc exec -n "${APP_NAMESPACE}" "${primary}" -c postgres -- \
+    psql -U postgres -d mydb -tAc "SELECT count(*) FROM \"${table}\""
 }

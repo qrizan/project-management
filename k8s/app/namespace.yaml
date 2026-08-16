@@ -6,3 +6,91 @@ metadata:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
+---
+# Tanpa policy default-deny, Pod yang tidak diseleksi policy mana pun menerima
+# trafik dari seluruh cluster — termasuk Pod Job yang hidup sebentar. Namespace
+# ditutup lebih dulu, lalu jalur yang memang dibutuhkan dibuka satu per satu oleh
+# rilis yang memilikinya.
+#
+# Aturan ini berada di luar chart mana pun karena berlaku untuk seluruh isi
+# namespace, dipakai bersama beberapa rilis sekaligus. Mencabut salah satu rilis
+# tidak boleh sekaligus membuka kembali seluruh namespace.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: project-management
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+  namespace: project-management
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+---
+# Resolusi nama dibuka untuk seluruh Pod di namespace ini, bukan per beban kerja.
+# Alasannya bukan kemudahan: Pod yang tidak bisa me-resolve nama gagal terhubung
+# sebelum aturan port mana pun sempat berlaku, sehingga uji yang seharusnya
+# membuktikan sebuah port terblokir justru lolos karena sebab yang sama sekali
+# berbeda. Membiarkan resolusi nama tetap terbuka menjaga hasil uji tetap berarti.
+#
+# Tujuannya diseleksi lewat label Pod DNS, bukan alamat Service: aturan egress
+# dievaluasi setelah alamat Service diterjemahkan ke alamat Pod, sehingga aturan
+# yang menyebut alamat Service tidak akan pernah cocok.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: project-management
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+---
+# Jalur keluar ke database untuk setiap Pod yang menyatakan dirinya klien.
+# Pasangan dari aturan masuk di sisi database, yang menyeleksi label yang sama.
+#
+# Ditulis sebagai baseline namespace, bukan sebagai bagian rilis aplikasi, karena
+# migrasi skema berjalan sebagai hook — dan hook selalu dijalankan sebelum
+# resource rilis dibuat. Aturan yang ikut rilis baru ada beberapa saat setelah
+# Pod yang membutuhkannya mati, sehingga migrasi tidak pernah bisa terhubung.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-database
+  namespace: project-management
+spec:
+  podSelector:
+    matchLabels:
+      postgres-client: "true"
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchExpressions:
+        - key: cnpg.io/cluster
+          operator: Exists
+    ports:
+    - protocol: TCP
+      port: 5432

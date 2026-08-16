@@ -1,0 +1,83 @@
+{{- if .Values.networkPolicy.clients.enabled }}
+{{- $label := .Values.networkPolicy.clients.podLabel }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.cluster.name }}-allow-clients
+  labels:
+    {{- include "database.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: {{ .Values.cluster.name }}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{ $label.key }}: {{ $label.value | quote }}
+    ports:
+    - protocol: TCP
+      port: 5432
+{{- end }}
+{{- if .Values.networkPolicy.operatorStatus.enabled }}
+{{- $op := .Values.networkPolicy.operatorStatus }}
+---
+# Menyeleksi Pod lewat keberadaan kunci label cnpg.io/cluster, bukan nilainya,
+# sehingga aturan ini juga berlaku untuk cluster lain di namespace yang sama —
+# termasuk cluster sementara yang dibuat untuk uji pemulihan, yang selalu
+# bernama lain dan sama-sama perlu dipantau operator.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $op.name }}
+  labels:
+    {{- include "database.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+    - key: cnpg.io/cluster
+      operator: Exists
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ $op.operatorNamespace }}
+    ports:
+    - protocol: TCP
+      port: {{ $op.port }}
+{{- end }}
+{{- if .Values.networkPolicy.egress.enabled }}
+{{- $eg := .Values.networkPolicy.egress }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $eg.name }}
+  labels:
+    {{- include "database.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+    - key: cnpg.io/cluster
+      operator: Exists
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: {{ required "networkPolicy.egress.apiServer.cidr wajib diisi selama egress dibatasi" $eg.apiServer.cidr }}
+    ports:
+    - protocol: TCP
+      port: {{ $eg.apiServer.port }}
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ $eg.objectStorage.namespace }}
+    ports:
+    - protocol: TCP
+      port: {{ $eg.objectStorage.port }}
+{{- end }}

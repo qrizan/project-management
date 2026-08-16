@@ -1,0 +1,9 @@
+apiVersion: v2
+name: app
+description: Aplikasi Next.js beserta jalur masuk Gateway API, penskalaan otomatis, dan migrasi database
+type: application
+version: 0.1.0
+
+# appVersion sengaja tidak diisi. Versi aplikasi yang dijalankan ditentukan oleh
+# image.tag di values dan berganti tiap rilis; menuliskannya lagi di sini membuat
+# dua nilai yang bisa berbeda diam-diam.

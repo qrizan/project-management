@@ -49,6 +49,11 @@ helm --kube-context "${KUBE_CONTEXT}" install eg \
   --timeout "${WAIT_LONG}" --wait
 kc wait --for=condition=Available deployment/envoy-gateway -n envoy-gateway-system --timeout="${WAIT_LONG}"
 
+# Cluster-scoped dan dipakai bersama oleh Gateway mana pun di cluster ini, jadi
+# dipasang di sini — bukan ikut rilis aplikasi yang bisa dicabut sewaktu-waktu.
+kc apply -f "${REPO_ROOT}/k8s/platform/gatewayclass.yaml"
+kc wait --for=condition=Accepted gatewayclass/eg --timeout="${WAIT_SHORT}"
+
 log "metrics-server"
 kc apply -k "${REPO_ROOT}/k8s/platform/metrics-server"
 kc rollout status deployment -n kube-system metrics-server --timeout="${WAIT_LONG}"

@@ -1,0 +1,51 @@
+{{- if .Values.migrate.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.migrate.name }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+  annotations:
+    # Dijalankan sebelum resource rilis diterapkan, baik saat pemasangan pertama
+    # maupun saat pembaruan: skema database harus sudah sesuai sebelum versi
+    # aplikasi yang baru mulai melayani permintaan.
+    #
+    # Job bersifat immutable, sehingga pembaruan hanya bisa diterapkan dengan
+    # menghapus Job sebelumnya lebih dulu — itu yang dilakukan before-hook-creation.
+    # Job yang sudah selesai sengaja tidak ikut dihapus supaya log-nya masih bisa
+    # dibaca setelah pemasangan.
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.migrate.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "app.databaseClientLabel" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      securityContext:
+        {{- include "app.podSecurityContext" . | nindent 8 }}
+      containers:
+      - name: migrate
+        image: "{{ .Values.migrate.image.repository }}:{{ .Values.migrate.image.tag }}"
+        imagePullPolicy: {{ .Values.migrate.image.pullPolicy }}
+        command: ["bunx", "prisma", "migrate", "deploy"]
+        env:
+        {{- include "app.databaseUrlEnv" . | nindent 8 }}
+        # Endpoint telemetri Prisma CLI tidak selalu bisa dijangkau dari
+        # lingkungan ini dan pernah menggantung perintah sampai timeout.
+        - name: CHECKPOINT_DISABLE
+          value: "1"
+        securityContext:
+          {{- include "app.containerSecurityContext" . | nindent 10 }}
+        resources:
+          {{- toYaml .Values.migrate.resources | nindent 10 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+{{- end }}

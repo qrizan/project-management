@@ -1,0 +1,124 @@
+cluster:
+  name: postgres
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
+
+  # Satu instance. Menaikkannya hanya bermanfaat kalau node-nya lebih dari satu;
+  # pada node tunggal seluruh replika dijadwalkan di tempat yang sama sehingga
+  # menambah beban tanpa redundansi.
+  instances: 1
+
+  storage:
+    size: 1Gi
+    # Kosong berarti memakai StorageClass default cluster.
+    storageClass: ""
+
+  # Database dan pemiliknya dibuat sekali saat cluster pertama kali di-bootstrap.
+  # Mengubahnya setelah itu tidak berpengaruh pada cluster yang sudah berjalan.
+  bootstrap:
+    database: mydb
+    owner: johndoe
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+backup:
+  enabled: true
+
+  # Nama plugin CNPG-I yang menangani arsip WAL dan backup. Nilainya ditentukan
+  # oleh plugin yang terpasang di cluster, bukan bebas dipilih.
+  pluginName: barman-cloud.cloudnative-pg.io
+
+  objectStore:
+    name: cnpg-backup-store
+    destinationPath: s3://cnpg-backups/
+
+    # Alamat object storage berbeda tiap lingkungan, jadi tidak ada nilai default
+    # yang masuk akal. Wajib diisi selama backup diaktifkan; nilai untuk cluster
+    # lokal ada di values-local.yaml.
+    endpointURL: ""
+
+    # Format retensi CNPG: angka diikuti satuan d, w, atau m. Merupakan recovery
+    # window — backup yang tidak lagi dibutuhkan untuk memulihkan ke titik mana
+    # pun dalam rentang ini akan dihapus.
+    retentionPolicy: "30d"
+
+    # Secret berisi kredensial S3, dibuat di luar chart supaya tidak ada
+    # kredensial yang ikut tersimpan di Git.
+    credentialsSecret:
+      name: garage-s3-credentials
+      accessKeyIdKey: ACCESS_KEY_ID
+      secretAccessKeyKey: SECRET_ACCESS_KEY
+      # Object storage non-AWS memakai nama region sendiri. Tanpa nilai ini
+      # signature request salah dan gagal dengan 400 yang tidak menyebut region.
+      regionKey: REGION
+
+  # Backup sekali jalan sengaja tidak ada di chart ini. Objek Backup CNPG adalah
+  # perintah "ambil backup sekarang", bukan keadaan yang diinginkan, dan hasilnya
+  # bergantung pada isi database saat itu — backup yang diambil sebelum data
+  # dimuat menghasilkan titik pemulihan kosong. Chart tidak bisa menyatakan
+  # "setelah data ada", jadi pemicunya ada di script yang memasang.
+
+  scheduled:
+    enabled: true
+    name: postgres-scheduled-backup
+    # CNPG memakai cron enam kolom — kolom pertama adalah detik. Ekspresi lima
+    # kolom hanya menghasilkan peringatan, bukan penolakan, sehingga salah
+    # format tidak langsung terlihat.
+    schedule: "0 0 2 * * *"
+
+networkPolicy:
+  # Membatasi port 5432 hanya untuk Pod yang menyatakan dirinya klien database.
+  clients:
+    enabled: true
+    # Label yang harus dipasang Pod agar boleh terhubung. Sengaja terpisah dari
+    # label aplikasi supaya Pod Job bisa mendapat izin ini tanpa ikut terseleksi
+    # Service aplikasi.
+    podLabel:
+      key: postgres-client
+      value: "true"
+
+  # Operator CNPG mem-polling status webserver instance manager di port 8000.
+  # Tanpa aturan ini Cluster berstatus error walau PostgreSQL sendiri sehat, dan
+  # pesan errornya tidak menyebut jaringan sama sekali.
+  #
+  # Berlaku untuk seluruh Cluster CNPG di namespace ini — diseleksi lewat
+  # keberadaan kunci label, bukan satu nama cluster, karena cluster yang dibuat
+  # untuk uji pemulihan bernama lain dan sama-sama perlu dipantau operator.
+  operatorStatus:
+    enabled: true
+    name: cnpg-allow-operator-status
+    operatorNamespace: cnpg-system
+    port: 8000
+
+  # Jalur keluar Pod PostgreSQL. Resolusi nama tidak diatur di sini — sudah
+  # dibuka untuk seluruh namespace di luar chart.
+  egress:
+    enabled: true
+    name: cnpg-allow-egress
+
+    # Instance manager menghubungi API server terus-menerus untuk melaporkan
+    # status; tanpa jalur ini Cluster tidak pernah mencapai keadaan sehat.
+    #
+    # Hanya bisa dinyatakan sebagai blok alamat: API server tidak punya Pod yang
+    # bisa diseleksi lewat label. Alamat Service `kubernetes` juga tidak berlaku,
+    # karena aturan dievaluasi setelah alamat itu diterjemahkan ke alamat nyata
+    # di belakangnya. Nilainya berbeda tiap cluster, jadi diisi oleh pemasang.
+    #
+    # Efek aturan ini belum terverifikasi. Diuji langsung pada cluster kind,
+    # tujuan berupa alamat node tetap terjangkau meski seluruh egress ditolak —
+    # penegakan di sana hanya berlaku untuk tujuan berupa Pod. Aturan tetap
+    # ditulis karena dibutuhkan di lingkungan yang menegakkan blok alamat, dan
+    # membiarkannya kosong akan memutus akses instance manager di sana.
+    apiServer:
+      cidr: ""
+      port: 6443
+
+    # Arsip WAL dan backup dikirim ke object storage di namespace lain.
+    objectStorage:
+      namespace: garage
+      port: 3900

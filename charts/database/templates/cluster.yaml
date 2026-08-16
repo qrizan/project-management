@@ -1,0 +1,34 @@
+{{- $c := .Values.cluster }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ $c.name }}
+  labels:
+    {{- include "database.labels" . | nindent 4 }}
+  annotations:
+    # Objek ini tidak ikut terhapus saat rilis dicabut. PersistentVolumeClaim
+    # milik cluster dimiliki oleh objek Cluster lewat ownerReference, sehingga
+    # menghapusnya berarti menghapus data PostgreSQL — akibat yang terlalu berat
+    # untuk dipicu oleh satu perintah pencabutan rilis.
+    helm.sh/resource-policy: keep
+spec:
+  instances: {{ $c.instances }}
+  imageName: {{ $c.imageName }}
+  storage:
+    size: {{ $c.storage.size }}
+    {{- with $c.storage.storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+  resources:
+    {{- toYaml $c.resources | nindent 4 }}
+  bootstrap:
+    initdb:
+      database: {{ $c.bootstrap.database }}
+      owner: {{ $c.bootstrap.owner }}
+  {{- if .Values.backup.enabled }}
+  plugins:
+  - name: {{ .Values.backup.pluginName }}
+    isWALArchiver: true
+    parameters:
+      barmanObjectName: {{ .Values.backup.objectStore.name }}
+  {{- end }}

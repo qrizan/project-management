@@ -1,32 +1,33 @@
-# Mengisi data contoh yang dipakai untuk membuktikan backup/restore memulihkan
-# isi yang benar. Sebelumnya langkah ini dijalankan manual lewat `kubectl exec`,
-# sehingga hasil uji restore tidak bisa dijalankan ulang oleh siapa pun.
-#
-# Isi seed datang dari ConfigMap `db-seed`, dibentuk dari file yang ada di repo
-# (`data/SQL.txt` dan `k8s/app/seed-user.sql`) — lihat script reproduce.
+{{- if .Values.seed.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: db-seed
-  namespace: project-management
+  name: {{ .Values.seed.name }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+  annotations:
+    # Dijalankan setelah resource rilis diterapkan, karena mengisi data bukan
+    # prasyarat aplikasi berjalan. Ikut jalan pada setiap pembaruan, bukan hanya
+    # pemasangan pertama: Job ini idempoten, dan alat GitOps memperlakukan hook
+    # pemasangan dan pembaruan sebagai hal yang sama sehingga membedakan keduanya
+    # tidak bisa diandalkan.
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
-  backoffLimit: 2
+  backoffLimit: {{ .Values.seed.backoffLimit }}
   template:
     metadata:
       labels:
-        postgres-client: "true"
+        {{- include "app.databaseClientLabel" . | nindent 8 }}
     spec:
       restartPolicy: Never
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        seccompProfile:
-          type: RuntimeDefault
+        {{- include "app.podSecurityContext" . | nindent 8 }}
       containers:
       - name: seed
-        # Image Postgres dipakai karena membawa `psql`; image aplikasi tidak.
-        image: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
-        imagePullPolicy: IfNotPresent
+        image: "{{ .Values.seed.image.repository }}:{{ .Values.seed.image.tag }}"
+        imagePullPolicy: {{ .Values.seed.image.pullPolicy }}
         command: ["/bin/bash", "-c"]
         # Tiap bagian diperiksa sendiri sebelum dimuat, sehingga Job aman
         # dijalankan ulang terhadap database yang sudah terisi sebagian.
@@ -50,25 +51,15 @@ spec:
             echo "seed: User sudah berisi $users baris, dilewati"
           fi
         env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: postgres-app
-              key: uri
+        {{- include "app.databaseUrlEnv" . | nindent 8 }}
+        # psql menulis berkas riwayat ke direktori home; tanpa ini home menunjuk
+        # ke lokasi yang tidak bisa ditulis pada root filesystem hanya-baca.
         - name: HOME
           value: /tmp
         securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop: ["ALL"]
+          {{- include "app.containerSecurityContext" . | nindent 10 }}
         resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 500m
-            memory: 256Mi
+          {{- toYaml .Values.seed.resources | nindent 10 }}
         volumeMounts:
         - name: seed
           mountPath: /seed
@@ -77,6 +68,7 @@ spec:
       volumes:
       - name: seed
         configMap:
-          name: db-seed
+          name: {{ .Values.seed.configMapName }}
       - name: tmp
         emptyDir: {}
+{{- end }}

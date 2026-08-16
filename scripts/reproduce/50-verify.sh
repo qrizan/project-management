@@ -6,27 +6,72 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 need kubectl
 need curl
+need helm
 require_cluster
 
-FAILED=0
+read_api_server_endpoint
 
-pass() { printf '  OK    %s\n' "$*"; }
-bad()  { printf '  GAGAL %s\n' "$*"; FAILED=$((FAILED + 1)); }
+# Image Pod uji diambil dari chart, bukan ditulis ulang di sini, supaya tidak ada
+# versi kembar yang bisa berbeda diam-diam.
+PROBE_IMAGE="$(helm_rendered_value database imageName: "${DATABASE_VALUES_ARGS[@]}")"
+[ -n "${PROBE_IMAGE}" ] || fail "image untuk Pod uji tidak terbaca dari chart database"
 
-check_eq() {
-  local label="$1" expected="$2" actual="$3"
-  if [ "${expected}" = "${actual}" ]; then
-    pass "${label} (${actual})"
-  else
-    bad "${label} — diharapkan '${expected}', dapat '${actual}'"
-  fi
-}
-
-psql_count() {
-  local cluster="$1" table="$2" primary
-  primary="$(kc get cluster "${cluster}" -n "${APP_NAMESPACE}" -o jsonpath='{.status.currentPrimary}')"
-  kc exec -n "${APP_NAMESPACE}" "${primary}" -c postgres -- \
-    psql -U postgres -d mydb -tAc "SELECT count(*) FROM \"${table}\""
+# Menjalankan Pod yang mencoba membuka satu koneksi TCP, lalu menyimpulkan dari
+# isi lognya. Keputusan sengaja tidak diambil dari sukses atau gagalnya Job: Job
+# yang gagal karena sebab lain — image tidak ada, Pod ditolak Pod Security, salah
+# argumen — tidak boleh terbaca sebagai bukti bahwa policy tidak menegakkan apa
+# pun.
+netpol_probe() {
+  local ns="$1" name="$2" host="$3" port="$4" label="$5"
+  kc delete job "${name}" -n "${ns}" --ignore-not-found >/dev/null
+  kc apply -f - >/dev/null <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${name}
+  namespace: ${ns}
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: probe
+        image: ${PROBE_IMAGE}
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          if timeout 10 bash -c 'cat < /dev/null > /dev/tcp/${host}/${port}'; then
+            echo REACHABLE
+            exit 1
+          fi
+          echo BLOCKED
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+EOF
+  local deadline=$(( SECONDS + 120 )) phase="" probe_log
+  while [ "${SECONDS}" -lt "${deadline}" ]; do
+    phase="$(kc get pods -n "${ns}" -l "batch.kubernetes.io/job-name=${name}" \
+      -o jsonpath='{.items[0].status.phase}' 2>/dev/null || true)"
+    case "${phase}" in Succeeded|Failed) break ;; esac
+    sleep 5
+  done
+  probe_log="$(kc logs -n "${ns}" "job/${name}" --tail=20 2>/dev/null || true)"
+  case "${probe_log}" in
+    *BLOCKED*)   pass "${label}" ;;
+    *REACHABLE*) bad "${label} — koneksi justru BERHASIL, policy tidak tertegakkan" ;;
+    *)           bad "${label} — probe tidak melaporkan hasil (phase ${phase:-tidak diketahui}), kemungkinan probe-nya sendiri gagal jalan. Log: ${probe_log}" ;;
+  esac
+  kc delete job "${name}" -n "${ns}" --ignore-not-found >/dev/null
 }
 
 log "1. Seluruh Pod berjalan dan siap"
@@ -58,13 +103,7 @@ for ns in "${APP_NAMESPACE}" "${GARAGE_NAMESPACE}"; do
 done
 
 log "3. Aplikasi dapat dijangkau lewat Gateway"
-gw_addr="$(kc get gateway project-management -n "${APP_NAMESPACE}" -o jsonpath='{.status.addresses[0].value}')"
-if [ -z "${gw_addr}" ]; then
-  bad "Gateway belum punya alamat"
-else
-  code="$(curl -fsS -o /dev/null -w '%{http_code}' --max-time 60 "http://${gw_addr}/auth/signin" || echo "gagal")"
-  check_eq "HTTP ${gw_addr}/auth/signin" "200" "${code}"
-fi
+check_eq "HTTP /auth/signin lewat Gateway" "200" "$(gateway_http_code /auth/signin)"
 
 log "4. metrics-server mengeluarkan angka"
 if kc top pods -n "${APP_NAMESPACE}" >/dev/null 2>&1; then
@@ -96,66 +135,18 @@ check_eq "jumlah Project" "30" "$(psql_count postgres Project)"
 check_eq "jumlah Category" "5" "$(psql_count postgres Category)"
 check_eq "jumlah User" "1" "$(psql_count postgres User)"
 
-# Pembuktian langsung bahwa policy benar-benar memblokir, bukan sekadar ada.
-# Pod ini tidak memakai label `postgres-client`, jadi seharusnya tidak bisa
-# membuka koneksi ke Postgres.
-log "7. NetworkPolicy benar-benar memblokir akses tanpa label"
-kc delete job netpol-probe -n "${APP_NAMESPACE}" --ignore-not-found >/dev/null
-kc apply -f - >/dev/null <<'EOF'
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: netpol-probe
-  namespace: project-management
-spec:
-  backoffLimit: 0
-  template:
-    spec:
-      restartPolicy: Never
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        seccompProfile:
-          type: RuntimeDefault
-      containers:
-      - name: probe
-        image: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
-        imagePullPolicy: IfNotPresent
-        command: ["/bin/bash", "-c"]
-        args:
-        - |
-          if timeout 10 bash -c 'cat < /dev/null > /dev/tcp/postgres-rw/5432'; then
-            echo REACHABLE
-            exit 1
-          fi
-          echo BLOCKED
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop: ["ALL"]
-EOF
-# Keputusan diambil dari isi log, bukan dari sukses/gagalnya Job. Job yang gagal
-# karena sebab lain (image, penolakan Pod Security, salah argumen) tidak boleh
-# terbaca sebagai bukti bahwa policy tidak menegakkan apa pun.
-probe_deadline=$(( SECONDS + 120 ))
-probe_phase=""
-while [ "${SECONDS}" -lt "${probe_deadline}" ]; do
-  probe_phase="$(kc get pods -n "${APP_NAMESPACE}" -l batch.kubernetes.io/job-name=netpol-probe \
-    -o jsonpath='{.items[0].status.phase}' 2>/dev/null || true)"
-  case "${probe_phase}" in Succeeded|Failed) break ;; esac
-  sleep 5
-done
-probe_log="$(kc logs -n "${APP_NAMESPACE}" job/netpol-probe --tail=20 2>/dev/null || true)"
-case "${probe_log}" in
-  *BLOCKED*)
-    pass "koneksi tanpa label postgres-client diblokir" ;;
-  *REACHABLE*)
-    bad "koneksi tanpa label postgres-client BERHASIL — NetworkPolicy tidak tertegakkan" ;;
-  *)
-    bad "probe tidak melaporkan hasil (phase ${probe_phase:-tidak diketahui}) — kemungkinan probe-nya sendiri gagal jalan, bukan soal policy. Log: ${probe_log}" ;;
-esac
-kc delete job netpol-probe -n "${APP_NAMESPACE}" --ignore-not-found >/dev/null
+# Pembuktian langsung bahwa aturan masuk benar-benar memblokir, bukan sekadar ada.
+#
+# Pod uji sengaja dijalankan dari namespace lain. Aturan masuk Postgres hanya
+# mengizinkan Pod ber-label `postgres-client` di namespace yang sama, jadi Pod
+# dari luar pasti ditolak olehnya. Menjalankannya dari namespace aplikasi tidak
+# lagi membuktikan hal itu sejak egress dibatasi: Pod tanpa label akan terhenti
+# di aturan keluar lebih dulu, sehingga hasilnya tidak bisa dikaitkan ke aturan
+# masuk yang sedang diuji.
+log "7. Aturan masuk Postgres memblokir klien yang tidak diizinkan"
+netpol_probe "${GARAGE_NAMESPACE}" netpol-ingress-probe \
+  "postgres-rw.${APP_NAMESPACE}.svc.cluster.local" 5432 \
+  "koneksi dari luar daftar klien diblokir"
 
 log "8. WAL archiving berjalan"
 # Backup manual yang sukses hanya membuktikan satu kali tulis ke object storage.
@@ -171,6 +162,25 @@ if kc wait --for=jsonpath='{.status.phase}'=completed backup/postgres-backup-man
 else
   bad "Backup tidak mencapai phase completed"
 fi
+
+# Pasangan dari pemeriksaan 7, arah sebaliknya.
+#
+# Pasangan pemeriksaan 7 dari dalam namespace aplikasi: Pod yang tidak membawa
+# penanda klien tidak boleh bisa menjangkau database.
+#
+# Judulnya sengaja tidak menyebut aturan mana yang bekerja. Pod ini ditolak oleh
+# aturan masuk maupun aturan keluar sekaligus, dan hasil "terblokir" tidak bisa
+# dikaitkan ke salah satunya saja. Yang dijamin pemeriksaan ini adalah postur
+# akhirnya, dan itu yang berlaku secara operasional.
+#
+# Menguji aturan keluar secara terpisah butuh tujuan yang aturan masuknya terbuka,
+# dan tidak ada Pod semacam itu di namespace ini. Tujuan di luar namespace sudah
+# dicoba dan ternyata tidak ditegakkan sama sekali oleh CNI di lingkungan ini,
+# sehingga tidak bisa dipakai sebagai pembuktian.
+log "10. Pod tanpa penanda klien tidak bisa menjangkau database"
+netpol_probe "${APP_NAMESPACE}" netpol-egress-probe \
+  "postgres-rw.${APP_NAMESPACE}.svc.cluster.local" 5432 \
+  "koneksi ke database dari Pod tanpa penanda klien diblokir"
 
 log "Ringkasan"
 if [ "${FAILED}" -eq 0 ]; then

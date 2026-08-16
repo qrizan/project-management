@@ -19,5 +19,6 @@ fi
 "${HERE}/20-platform.sh"
 "${HERE}/30-storage.sh"
 "${HERE}/40-app.sh"
+"${HERE}/45-helm-lifecycle.sh"
 "${HERE}/50-verify.sh"
 "${HERE}/60-restore-drill.sh"

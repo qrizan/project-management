@@ -1,0 +1,12 @@
+# Nilai untuk cluster kind lokal. Dipakai bersama values.yaml, bukan
+# menggantikannya:
+#
+#   helm upgrade --install app charts/app \
+#     -f charts/app/values.yaml -f charts/app/values-local.yaml
+#
+# Isinya terbatas pada hal yang memang khas lingkungan ini.
+
+# Data contoh dimuat supaya uji pemulihan backup punya isi yang bisa dibandingkan,
+# bukan sekadar database kosong yang selalu "cocok".
+seed:
+  enabled: true

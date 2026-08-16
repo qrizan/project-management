@@ -1,0 +1,10 @@
+# GatewayClass bersifat cluster-scoped dan menunjuk ke controller yang memasang
+# dirinya sendiri di namespace terpisah. Objek ini dipasang bersama implementasi
+# Gateway API, bukan bersama aplikasi: kalau ikut rilis aplikasi, mencabut rilis
+# itu akan menghapus objek yang berlaku untuk seluruh cluster.
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller

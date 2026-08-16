@@ -1,0 +1,9 @@
+apiVersion: v2
+name: database
+description: Cluster PostgreSQL CloudNativePG beserta arsip WAL dan backup terjadwal ke object storage S3
+type: application
+version: 0.1.0
+
+# appVersion sengaja tidak diisi. Versi PostgreSQL yang benar-benar dipakai
+# ditentukan oleh cluster.imageName di values; menuliskannya lagi di sini
+# membuat dua nilai yang bisa berbeda diam-diam.

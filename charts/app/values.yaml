@@ -1,0 +1,130 @@
+# Nama objek Deployment, Service, dan HorizontalPodAutoscaler. Kosong berarti
+# memakai nama rilis.
+fullnameOverride: ""
+
+image:
+  repository: project-management-app
+  tag: runner
+  # IfNotPresent, bukan Always: image dibangun di host lalu dimuat ke node dan
+  # tidak ada di registry mana pun, sehingga penarikan ulang pasti gagal.
+  pullPolicy: IfNotPresent
+
+# Hanya berlaku kalau autoscaling.enabled bernilai false. Saat HPA aktif, field
+# replicas sengaja tidak dirender supaya jumlah replika sepenuhnya dikendalikan
+# HPA — kalau ditulis, setiap penerapan ulang mengembalikannya ke angka statis
+# dan membatalkan hasil penskalaan.
+replicaCount: 1
+
+service:
+  port: 3000
+
+containerPort: 3000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# Halaman publik yang dipakai sebagai probe. Belum memverifikasi koneksi
+# database — Pod dinyatakan siap selama proses Next.js melayani HTTP, walau
+# database sedang tidak terjangkau.
+probes:
+  path: /auth/signin
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 15
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 50
+
+gateway:
+  enabled: true
+  name: project-management
+  # Nama GatewayClass yang dipasang bersama implementasi Gateway API di cluster.
+  className: eg
+  port: 80
+  # Kosong berarti HTTPRoute tanpa hostnames — rute menerima permintaan dengan
+  # Host apa pun. Dipakai saat aplikasi dijangkau lewat alamat IP LoadBalancer
+  # dan belum ada nama domain.
+  hostname: ""
+
+# Secret dibuat di luar chart supaya tidak ada kredensial yang ikut tersimpan di
+# Git. Chart hanya merujuk namanya.
+secrets:
+  # Dibuat otomatis oleh operator CloudNativePG, berisi URL koneksi lengkap.
+  database:
+    name: postgres-app
+    key: uri
+  nextauth:
+    name: app-secrets
+    key: NEXTAUTH_SECRET
+
+# Label yang menandai Pod sebagai klien database. NetworkPolicy di sisi database
+# memakai label ini untuk mengizinkan koneksi, jadi nilainya harus sama dengan
+# yang dipakai chart database.
+databaseClientLabel:
+  key: postgres-client
+  value: "true"
+
+# Migrasi Prisma, dijalankan sebagai hook sebelum resource rilis diterapkan.
+migrate:
+  enabled: true
+  name: prisma-migrate
+  image:
+    # Stage builder, bukan runner: Prisma CLI sengaja tidak ikut ke image
+    # produksi, sehingga migrasi memakai image build yang lebih lengkap.
+    repository: project-management-app
+    tag: builder
+    pullPolicy: IfNotPresent
+  backoffLimit: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+# Data contoh. Dimatikan secara default: isinya datang dari ConfigMap yang
+# dibentuk di luar chart, dan tidak setiap lingkungan menginginkan data demo.
+seed:
+  enabled: false
+  name: db-seed
+  # ConfigMap berisi berkas SQL, dibuat di luar chart dari file di repo. Helm
+  # tidak bisa membaca berkas di luar direktori chart, dan menyalinnya ke dalam
+  # chart akan membuat dua sumber kebenaran untuk data yang sama.
+  configMapName: db-seed
+  image:
+    # Image PostgreSQL dipakai karena membawa psql; image aplikasi tidak.
+    repository: ghcr.io/cloudnative-pg/postgresql
+    tag: 18.4-system-trixie
+    pullPolicy: IfNotPresent
+  backoffLimit: 2
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+networkPolicy:
+  # Mengizinkan trafik masuk ke Pod aplikasi hanya dari namespace tempat
+  # implementasi Gateway API berjalan.
+  gateway:
+    enabled: true
+    namespace: envoy-gateway-system
+
+  # Jalur keluar tidak diatur chart ini. Resolusi nama dan akses ke database
+  # ditetapkan sebagai baseline namespace, karena migrasi skema berjalan sebagai
+  # hook — dijalankan sebelum resource rilis dibuat, sehingga aturan yang ikut
+  # rilis belum ada saat Pod migrasi membutuhkannya.

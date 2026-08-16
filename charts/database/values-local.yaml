@@ -1,0 +1,13 @@
+# Nilai untuk cluster kind lokal. Dipakai bersama values.yaml, bukan
+# menggantikannya:
+#
+#   helm upgrade --install database charts/database \
+#     -f charts/database/values.yaml -f charts/database/values-local.yaml
+#
+# Isinya terbatas pada hal yang benar-benar terikat lingkungan ini. Nilai lain
+# di values.yaml sudah sesuai untuk node tunggal dan tidak perlu ditimpa.
+
+backup:
+  objectStore:
+    # Garage berjalan di dalam cluster yang sama, di namespace `garage`.
+    endpointURL: http://garage.garage.svc.cluster.local:3900

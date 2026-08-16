@@ -11,18 +11,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 need kubectl
 require_cluster
 
-FAILED=0
 DRILL_CLUSTER=postgres-restore-test
-
-pass() { printf '  OK    %s\n' "$*"; }
-bad()  { printf '  GAGAL %s\n' "$*"; FAILED=$((FAILED + 1)); }
-
-psql_count() {
-  local cluster="$1" table="$2" primary
-  primary="$(kc get cluster "${cluster}" -n "${APP_NAMESPACE}" -o jsonpath='{.status.currentPrimary}')"
-  kc exec -n "${APP_NAMESPACE}" "${primary}" -c postgres -- \
-    psql -U postgres -d mydb -tAc "SELECT count(*) FROM \"${table}\""
-}
 
 # Pembersihan dijalankan di awal (supaya sisa jalan sebelumnya tidak terbaca
 # sebagai hasil) dan di akhir HANYA kalau uji lolos. Sengaja tidak dipasang

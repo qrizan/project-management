@@ -1,0 +1,27 @@
+{{- if .Values.backup.enabled }}
+{{- $store := .Values.backup.objectStore }}
+{{- $creds := $store.credentialsSecret }}
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: {{ $store.name }}
+  labels:
+    {{- include "database.labels" . | nindent 4 }}
+spec:
+  {{- with $store.retentionPolicy }}
+  retentionPolicy: {{ . | quote }}
+  {{- end }}
+  configuration:
+    destinationPath: {{ $store.destinationPath | quote }}
+    endpointURL: {{ required "backup.objectStore.endpointURL wajib diisi selama backup.enabled" $store.endpointURL | quote }}
+    s3Credentials:
+      accessKeyId:
+        name: {{ $creds.name }}
+        key: {{ $creds.accessKeyIdKey }}
+      secretAccessKey:
+        name: {{ $creds.name }}
+        key: {{ $creds.secretAccessKeyKey }}
+      region:
+        name: {{ $creds.name }}
+        key: {{ $creds.regionKey }}
+{{- end }}
