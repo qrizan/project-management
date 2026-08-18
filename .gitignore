@@ -43,13 +43,13 @@ next-env.d.ts
 CLAUDE.md
 PLAN.md
 PROGRESS.md
-ARCHITECTURE.md
-DECISION.md
-SECURITY.md
+ARCHITECTURE.INTERNAL.md
+DECISION.INTERNAL.md
+SECURITY.INTERNAL.md
 LESSON.md
 
 # docker
 docker-compose.override.yml
 
 # output
-scripts/reproduce/output.txt
+scripts/reproduce/output*.txt
