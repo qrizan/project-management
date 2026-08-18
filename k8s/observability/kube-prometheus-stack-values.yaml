@@ -1,0 +1,78 @@
+# Ditune untuk muat di RAM mesin lokal yang terbatas, bukan nilai bawaan
+# chart yang mengasumsikan cluster produksi. Retention pendek dan resource
+# kecil masuk akal untuk portofolio lokal, bukan untuk beban nyata.
+#
+# kubeScheduler/kubeControllerManager/kubeEtcd/kubeProxy dimatikan karena
+# kontrol plane kind menjalankannya sebagai proses di dalam container node,
+# bukan static Pod dengan endpoint metrik yang bisa diseleksi lewat Service.
+# Scrape target untuk keempatnya diperkirakan tidak akan pernah "up" di kind.
+# Belum diverifikasi langsung di cluster; kalau ternyata terekspos, baris ini
+# direvisi setelah dicek, bukan dibiarkan salah diam-diam.
+defaultRules:
+  rules:
+    kubeScheduler: false
+    kubeControllerManager: false
+    kubeEtcd: false
+    kubeProxy: false
+
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    retention: 6h
+    scrapeInterval: 30s
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        memory: 768Mi
+
+alertmanager:
+  alertmanagerSpec:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+# Kredensial admin dibuat lewat openssl rand oleh reproduce script, sama seperti
+# Secret lain di repo ini — tidak ada nilai default yang masuk Git.
+grafana:
+  persistence:
+    enabled: false
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      memory: 64Mi

@@ -1,0 +1,28 @@
+# Alert rule khusus untuk membuktikan DoD Fase 6 ("minimal 1 alert rule yang bisa dipicu sengaja"), 
+# bukan indikator masalah produksi. 
+# `for: 30s` sengaja pendek - alert bawaan chart seperti KubePodCrashLooping pakai `for: 15m`,
+# terlalu lama untuk dipakai sebagai pemeriksaan yang diulang tiap reproduce.
+#
+# Label `release: kube-prometheus-stack` mengikuti default ruleSelector
+# operator (memilih PrometheusRule berlabel nama rilis Helm-nya) - 
+# belum diverifikasi langsung di cluster; kalau salah, rule ini tidak pernah dimuat
+# operator dan 48-alert-drill.sh yang membuktikannya lewat kegagalan.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: app-restart-demo
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: app-restart-demo
+    rules:
+    - alert: AppPodRestartingDemo
+      expr: increase(kube_pod_container_status_restarts_total{namespace="project-management", container="app"}[5m]) > 0
+      for: 30s
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod app di namespace project-management baru saja restart"
+        description: "Dipicu sengaja oleh 48-alert-drill.sh untuk membuktikan alert rule berfungsi, bukan sinyal insiden nyata."

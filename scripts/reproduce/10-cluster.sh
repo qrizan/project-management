@@ -6,7 +6,7 @@ need kind
 need kubectl
 
 if kind get clusters 2>/dev/null | grep -qx "${CLUSTER_NAME}"; then
-  fail "cluster '${CLUSTER_NAME}' sudah ada — jalankan 00-teardown.sh dulu"
+  fail "cluster '${CLUSTER_NAME}' sudah ada, jalankan 00-teardown.sh dulu"
 fi
 
 log "Membuat cluster kind '${CLUSTER_NAME}'"

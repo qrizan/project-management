@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# Memasang kube-prometheus-stack (Prometheus, Alertmanager, Grafana,
+# kube-state-metrics, node-exporter) sebagai satu rilis Helm dari repo pihak
+# ketiga, di namespace terpisah dari kedua rilis aplikasi.
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
+need kubectl
+need helm
+need openssl
+need docker
+need kind
+require_cluster
+
+log "Namespace ${MONITORING_NAMESPACE} (privileged, node-exporter butuh hostPath/hostNetwork/hostPID)"
+kc apply -f "${REPO_ROOT}/k8s/observability/namespace.yaml"
+
+create_secret_once "${MONITORING_NAMESPACE}" grafana-admin \
+  --from-literal=admin-user=admin \
+  --from-literal=admin-password="$(openssl rand -base64 20)"
+
+# `--repo` langsung di `upgrade --install` mengunduh ulang index.yaml repo
+# tiap kali dipanggil. Index-nya cukup besar dan pernah timeout di jaringan
+# ini. `helm repo add` + `repo update` pakai jalur HTTP dengan batas waktu
+# lebih longgar dan hasilnya di-cache lokal.
+log "Menambahkan/memperbarui repo Helm prometheus-community"
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts >/dev/null
+
+# Cache Helm ada di host (~/.cache/helm), bukan di cluster kind, jadi tidak
+# ikut terhapus --clean. Kalau repo update tetap gagal setelah beberapa kali
+# coba, lanjut pakai cache lama, bukan menghentikan script: versi chart dipatok eksak, 
+# jadi upgrade --install sendiri yang menentukan berhasil atau tidak.
+repo_update_attempt=0
+until helm repo update prometheus-community; do
+  repo_update_attempt=$(( repo_update_attempt + 1 ))
+  if [ "${repo_update_attempt}" -ge 3 ]; then
+    log "helm repo update gagal ${repo_update_attempt}x, lanjut pakai cache lama di ~/.cache/helm"
+    break
+  fi
+  printf '  ... percobaan %s gagal, coba lagi\n' "${repo_update_attempt}"
+  sleep 10
+done
+
+# kube-prometheus-stack menarik banyak image sekaligus :
+# (Prometheus, Alertmanager, Grafana, kube-state-metrics, node-exporter, dan beberapa sidecar). 
+# Dibiarkan kubelet menariknya sendiri-sendiri secara paralel,
+# semuanya berebut bandwidth yang sama di jaringan yang lambat, 
+# dan pernah membuat satu image kecil butuh waktu sangat lama, bukan karena ukurannya sendiri besar. 
+#
+# Ditarik satu-satu di host lalu dimuat ke node,
+# pola yang sama seperti image PostgreSQL dan aplikasi di 40-app.sh.
+#
+# Daftar image diambil hanya dari dokumen yang kind-nya benar-benar
+# menjalankan container (Deployment/StatefulSet/DaemonSet/Job/CronJob).
+# Chart ini juga membuat ConfigMap berisi dashboard Grafana dan konfigurasi Alertmanager, 
+# yang isinya teks bebas dan bisa saja memuat baris berbentuk
+# "image:" tanpa hubungan dengan container manapun.
+log "Menyiapkan image kube-prometheus-stack (ditarik satu-satu di host)"
+images="$(helm template "${KUBE_PROMETHEUS_STACK_RELEASE}" prometheus-community/kube-prometheus-stack \
+  --version "${KUBE_PROMETHEUS_STACK_VERSION}" \
+  --namespace "${MONITORING_NAMESPACE}" \
+  -f "${REPO_ROOT}/k8s/observability/kube-prometheus-stack-values.yaml" \
+  | awk '
+      /^---$/ { keep = 0 }
+      /^kind: (Deployment|StatefulSet|DaemonSet|Job|CronJob)$/ { keep = 1 }
+      keep { print }
+    ' \
+  | grep -E '^[[:space:]]*(- )?image:' \
+  | sed -E 's/^[[:space:]]*(- )?image:[[:space:]]*//; s/["'"'"']//g' \
+  | sort -u)"
+[ -n "${images}" ] || fail "tidak ada image terbaca dari render chart kube-prometheus-stack"
+for img in ${images}; do
+  docker pull "${img}"
+  kind load docker-image --name "${CLUSTER_NAME}" "${img}"
+done
+
+log "kube-prometheus-stack ${KUBE_PROMETHEUS_STACK_VERSION}"
+helm --kube-context "${KUBE_CONTEXT}" upgrade --install "${KUBE_PROMETHEUS_STACK_RELEASE}" \
+  prometheus-community/kube-prometheus-stack \
+  --version "${KUBE_PROMETHEUS_STACK_VERSION}" \
+  --namespace "${MONITORING_NAMESPACE}" \
+  -f "${REPO_ROOT}/k8s/observability/kube-prometheus-stack-values.yaml" \
+  --timeout "${WAIT_LONG}"
+
+# `kubectl wait` pada banyak Pod sekaligus tidak bisa diandalkan: 
+# Pod yang sudah Ready sebelum watch-nya terpasang tetap dilaporkan "timed out". 
+# Dipoll manual, dengan progres dicetak supaya penantian panjang tidak terlihat seperti macet.
+#
+# Dicek tanpa filter label. Pod Prometheus dan Alertmanager dibuat operator
+# dari CRD, bukan langsung oleh Helm, jadi tidak ikut label instance chart.
+# Namespace ini isinya cuma rilis ini, jadi mengecek seluruh Pod di namespace
+# sama dengan mengecek seluruh Pod rilis ini.
+log "Menunggu seluruh Pod monitoring siap"
+deadline=$(( SECONDS + WAIT_LONG_SECS ))
+while true; do
+  total="$(kc get pods -n "${MONITORING_NAMESPACE}" --no-headers | wc -l)"
+  not_ready="$(kc get pods -n "${MONITORING_NAMESPACE}" \
+    -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}' \
+    | awk '$2 != "True" { printf "%s ", $1 }')"
+  if [ "${total}" -ge 6 ] && [ -z "${not_ready}" ]; then
+    break
+  fi
+  if [ "${SECONDS}" -ge "${deadline}" ]; then
+    fail "Pod monitoring belum Ready setelah ${WAIT_LONG}: ${not_ready}"
+  fi
+  printf '  ... belum Ready (%s/6 Pod ada): %s\n' "${total}" "${not_ready:-menunggu Pod muncul}"
+  sleep 15
+done
+
+log "Monitoring terpasang"
+helm --kube-context "${KUBE_CONTEXT}" list -n "${MONITORING_NAMESPACE}"
+kc get pods -n "${MONITORING_NAMESPACE}"

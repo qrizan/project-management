@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Memeriksa Definition of Done Fase 2 sebagai pemeriksaan yang bisa gagal,
-# bukan sebagai pengamatan manual. Seluruh pemeriksaan dijalankan sampai habis
-# walau ada yang gagal, supaya satu kali jalan memberi gambaran penuh.
+# Pemeriksaan cepat orkestrasi, bisa gagal, bukan pengamatan manual. Seluruh
+# pemeriksaan dijalankan sampai habis walau ada yang gagal, supaya satu kali
+# jalan memberi gambaran penuh.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 need kubectl
@@ -16,11 +16,10 @@ read_api_server_endpoint
 PROBE_IMAGE="$(helm_rendered_value database imageName: "${DATABASE_VALUES_ARGS[@]}")"
 [ -n "${PROBE_IMAGE}" ] || fail "image untuk Pod uji tidak terbaca dari chart database"
 
-# Menjalankan Pod yang mencoba membuka satu koneksi TCP, lalu menyimpulkan dari
-# isi lognya. Keputusan sengaja tidak diambil dari sukses atau gagalnya Job: Job
-# yang gagal karena sebab lain — image tidak ada, Pod ditolak Pod Security, salah
-# argumen — tidak boleh terbaca sebagai bukti bahwa policy tidak menegakkan apa
-# pun.
+# Menjalankan Pod yang mencoba membuka satu koneksi TCP, lalu menyimpulkan dari isi lognya. 
+# Keputusan sengaja tidak diambil dari sukses atau gagalnya Job:
+# Job yang gagal karena sebab lain (image tidak ada, Pod ditolak Pod Security,
+# salah argumen) tidak boleh terbaca sebagai bukti policy tidak menegakkan apa pun.
 netpol_probe() {
   local ns="$1" name="$2" host="$3" port="$4" label="$5"
   kc delete job "${name}" -n "${ns}" --ignore-not-found >/dev/null
@@ -68,8 +67,8 @@ EOF
   probe_log="$(kc logs -n "${ns}" "job/${name}" --tail=20 2>/dev/null || true)"
   case "${probe_log}" in
     *BLOCKED*)   pass "${label}" ;;
-    *REACHABLE*) bad "${label} — koneksi justru BERHASIL, policy tidak tertegakkan" ;;
-    *)           bad "${label} — probe tidak melaporkan hasil (phase ${phase:-tidak diketahui}), kemungkinan probe-nya sendiri gagal jalan. Log: ${probe_log}" ;;
+    *REACHABLE*) bad "${label}: koneksi justru BERHASIL, policy tidak tertegakkan" ;;
+    *)           bad "${label}: probe tidak melaporkan hasil (phase ${phase:-tidak diketahui}), kemungkinan probe-nya sendiri gagal jalan. Log: ${probe_log}" ;;
   esac
   kc delete job "${name}" -n "${ns}" --ignore-not-found >/dev/null
 }
@@ -80,11 +79,11 @@ for ns in "${APP_NAMESPACE}" "${GARAGE_NAMESPACE}"; do
   # dihasilkan oleh namespace yang sama sekali tidak berisi Pod.
   total="$(kc get pods -n "${ns}" --no-headers 2>/dev/null | wc -l)"
   if [ "${total}" -eq 0 ]; then
-    bad "namespace ${ns} — tidak ada Pod sama sekali"
+    bad "namespace ${ns}: tidak ada Pod sama sekali"
     continue
   fi
   # `Running` belum berarti siap melayani; yang diperiksa condition Ready.
-  # Pod Job yang sudah selesai berstatus Succeeded dengan Ready=False — itu
+  # Pod Job yang sudah selesai berstatus Succeeded dengan Ready=False, itu
   # keadaan normal, bukan tidak sehat.
   unhealthy="$(kc get pods -n "${ns}" \
     -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.status.phase}{" "}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}' \
@@ -92,7 +91,7 @@ for ns in "${APP_NAMESPACE}" "${GARAGE_NAMESPACE}"; do
   if [ -z "${unhealthy}" ]; then
     pass "namespace ${ns} (${total} Pod)"
   else
-    bad "namespace ${ns} — Pod belum siap: ${unhealthy}"
+    bad "namespace ${ns}, Pod belum siap: ${unhealthy}"
   fi
 done
 
@@ -113,9 +112,8 @@ else
 fi
 
 log "5. HPA membaca metrik"
-# Di-poll, bukan dibaca sekali: controller HPA baru mengisi status setelah
-# sempat mengambil sampel, sehingga pembacaan tepat setelah HPA dibuat selalu
-# kosong tanpa ada yang salah.
+# Di-poll, bukan dibaca sekali: controller HPA baru mengisi status setelah sempat mengambil sampel, 
+# sehingga pembacaan tepat setelah HPA dibuat selalu kosong tanpa ada yang salah.
 hpa_target=""
 hpa_deadline=$(( SECONDS + 180 ))
 while [ "${SECONDS}" -lt "${hpa_deadline}" ]; do
@@ -127,7 +125,7 @@ done
 if [ -n "${hpa_target}" ]; then
   pass "HPA membaca utilisasi CPU (${hpa_target}%)"
 else
-  bad "HPA tidak punya metrik setelah 3 menit — cek metrics-server"
+  bad "HPA tidak punya metrik setelah 3 menit, cek metrics-server"
 fi
 
 log "6. Data hasil seed"
@@ -135,14 +133,11 @@ check_eq "jumlah Project" "30" "$(psql_count postgres Project)"
 check_eq "jumlah Category" "5" "$(psql_count postgres Category)"
 check_eq "jumlah User" "1" "$(psql_count postgres User)"
 
-# Pembuktian langsung bahwa aturan masuk benar-benar memblokir, bukan sekadar ada.
-#
-# Pod uji sengaja dijalankan dari namespace lain. Aturan masuk Postgres hanya
-# mengizinkan Pod ber-label `postgres-client` di namespace yang sama, jadi Pod
-# dari luar pasti ditolak olehnya. Menjalankannya dari namespace aplikasi tidak
-# lagi membuktikan hal itu sejak egress dibatasi: Pod tanpa label akan terhenti
-# di aturan keluar lebih dulu, sehingga hasilnya tidak bisa dikaitkan ke aturan
-# masuk yang sedang diuji.
+# Pod uji dijalankan dari namespace lain, bukan dari namespace aplikasi.
+# Aturan masuk Postgres cuma mengizinkan Pod berlabel `postgres-client` di
+# namespace yang sama, jadi Pod dari luar pasti ditolak. 
+# Sejak egress dibatasi, Pod tanpa label di namespace aplikasi akan terhenti di aturan
+# keluar lebih dulu, sehingga hasilnya tidak bisa dikaitkan ke aturan masuk yang sedang diuji di sini.
 log "7. Aturan masuk Postgres memblokir klien yang tidak diizinkan"
 netpol_probe "${GARAGE_NAMESPACE}" netpol-ingress-probe \
   "postgres-rw.${APP_NAMESPACE}.svc.cluster.local" 5432 \
@@ -163,29 +158,65 @@ else
   bad "Backup tidak mencapai phase completed"
 fi
 
-# Pasangan dari pemeriksaan 7, arah sebaliknya.
+# Pasangan pemeriksaan 7, dari dalam namespace aplikasi: Pod tanpa penanda
+# klien tidak boleh bisa menjangkau database.
 #
-# Pasangan pemeriksaan 7 dari dalam namespace aplikasi: Pod yang tidak membawa
-# penanda klien tidak boleh bisa menjangkau database.
+# Judulnya sengaja tidak menyebut aturan mana yang bekerja. Pod ini kena
+# aturan masuk maupun aturan keluar sekaligus, jadi hasil "terblokir" tidak
+# bisa dikaitkan ke salah satunya. Yang dijamin pemeriksaan ini adalah
+# postur akhirnya, dan itu yang berlaku secara operasional.
 #
-# Judulnya sengaja tidak menyebut aturan mana yang bekerja. Pod ini ditolak oleh
-# aturan masuk maupun aturan keluar sekaligus, dan hasil "terblokir" tidak bisa
-# dikaitkan ke salah satunya saja. Yang dijamin pemeriksaan ini adalah postur
-# akhirnya, dan itu yang berlaku secara operasional.
-#
-# Menguji aturan keluar secara terpisah butuh tujuan yang aturan masuknya terbuka,
-# dan tidak ada Pod semacam itu di namespace ini. Tujuan di luar namespace sudah
-# dicoba dan ternyata tidak ditegakkan sama sekali oleh CNI di lingkungan ini,
-# sehingga tidak bisa dipakai sebagai pembuktian.
+# Menguji aturan keluar secara terpisah butuh tujuan dengan aturan masuk
+# terbuka, dan tidak ada Pod semacam itu di namespace ini. Tujuan di luar
+# namespace sudah dicoba dan ternyata tidak ditegakkan oleh CNI di
+# lingkungan ini, jadi tidak bisa dipakai sebagai pembuktian.
 log "10. Pod tanpa penanda klien tidak bisa menjangkau database"
 netpol_probe "${APP_NAMESPACE}" netpol-egress-probe \
   "postgres-rw.${APP_NAMESPACE}.svc.cluster.local" 5432 \
   "koneksi ke database dari Pod tanpa penanda klien diblokir"
 
+log "11. Namespace monitoring privileged (node-exporter, dikecualikan dari restricted)"
+actual="$(kc get ns "${MONITORING_NAMESPACE}" -o jsonpath='{.metadata.labels.pod-security\.kubernetes\.io/enforce}')"
+check_eq "enforce di namespace ${MONITORING_NAMESPACE}" "privileged" "${actual}"
+
+# Diperiksa lewat API Prometheus, bukan cuma status Pod Running: Pod bisa
+# Running tanpa satu pun scrape target-nya berhasil.
+log "12. Prometheus men-scrape target di namespace aplikasi"
+prom_svc="$(kc get svc -n "${MONITORING_NAMESPACE}" -l "app=${KUBE_PROMETHEUS_STACK_RELEASE}-prometheus" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+prom_query() {
+  curl -fsS --max-time 10 -G \
+    --data-urlencode "query=$1" \
+    "http://127.0.0.1:19090/api/v1/query" | grep -q '"result":\[{'
+}
+if [ -z "${prom_svc}" ]; then
+  bad "Service Prometheus tidak ditemukan di namespace ${MONITORING_NAMESPACE}"
+elif with_port_forward "${MONITORING_NAMESPACE}" "${prom_svc}" 19090 9090 \
+       prom_query "container_memory_working_set_bytes{namespace=\"${APP_NAMESPACE}\"}"; then
+  pass "cAdvisor melaporkan memory Pod di namespace ${APP_NAMESPACE}"
+else
+  bad "Prometheus tidak punya sampel container_memory_working_set_bytes untuk namespace ${APP_NAMESPACE}"
+fi
+
+log "13. Dashboard Grafana tersedia"
+grafana_svc="$(kc get svc -n "${MONITORING_NAMESPACE}" -l app.kubernetes.io/name=grafana -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+grafana_user="$(kc get secret grafana-admin -n "${MONITORING_NAMESPACE}" -o jsonpath='{.data.admin-user}' 2>/dev/null | base64 -d)"
+grafana_pass="$(kc get secret grafana-admin -n "${MONITORING_NAMESPACE}" -o jsonpath='{.data.admin-password}' 2>/dev/null | base64 -d)"
+grafana_query() {
+  curl -fsS --max-time 10 -u "${grafana_user}:${grafana_pass}" \
+    "http://127.0.0.1:19300/api/search?query=pod" | grep -qi '"title"'
+}
+if [ -z "${grafana_svc}" ] || [ -z "${grafana_user}" ]; then
+  bad "Service atau kredensial Grafana tidak ditemukan di namespace ${MONITORING_NAMESPACE}"
+elif with_port_forward "${MONITORING_NAMESPACE}" "${grafana_svc}" 19300 80 grafana_query; then
+  pass "Grafana punya dashboard yang cocok kata kunci 'pod'"
+else
+  bad "Grafana tidak punya dashboard yang cocok kata kunci 'pod', atau tidak bisa dihubungi"
+fi
+
 log "Ringkasan"
 if [ "${FAILED}" -eq 0 ]; then
   echo "Seluruh pemeriksaan cepat lolos."
-  echo "Uji restore belum termasuk di sini — jalankan 60-restore-drill.sh."
+  echo "Uji restore belum termasuk di sini, jalankan 60-restore-drill.sh."
 else
   echo "${FAILED} pemeriksaan gagal."
   exit 1

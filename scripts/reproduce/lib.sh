@@ -1,6 +1,6 @@
-# Fungsi bersama untuk seluruh script reproduce. Di-source, bukan dieksekusi —
-# karena itu tidak ber-shebang; shell targetnya dinyatakan lewat direktif di
-# bawah supaya tetap bisa dianalisis static checker.
+# Fungsi bersama untuk seluruh script reproduce. Di-source, bukan dieksekusi,
+# jadi tidak ber-shebang. Shell targetnya dinyatakan lewat direktif di bawah
+# supaya tetap bisa dianalisis static checker.
 # shellcheck shell=bash
 
 set -euo pipefail
@@ -12,25 +12,23 @@ readonly REPO_ROOT
 source "${REPO_ROOT}/scripts/reproduce/versions.env"
 
 # Nama cluster dibaca dari manifest yang dipakai kind, bukan ditulis ulang di
-# sini — supaya tidak ada dua sumber kebenaran yang bisa berbeda diam-diam.
+# sini, supaya tidak ada dua sumber kebenaran yang bisa berbeda diam-diam.
 # Nama namespace tetap konstanta script: namanya muncul di banyak manifest
-# sekaligus, sehingga menurunkannya dari salah satu file justru lebih rapuh.
+# sekaligus, jadi menurunkannya dari satu file lain justru lebih rapuh.
 CLUSTER_NAME="$(awk '/^name:/ {print $2; exit}' "${REPO_ROOT}/k8s/kind-cluster.yaml")"
 KUBE_CONTEXT="kind-${CLUSTER_NAME}"
 readonly CLUSTER_NAME KUBE_CONTEXT
 
-# Jaringan mesin ini terukur lambat dan beberapa image platform berukuran besar;
-# satu pull pernah memakan 27 menit. Batas tunggu dibuat longgar supaya kegagalan
-# yang dilaporkan benar-benar kegagalan, bukan sekadar kehabisan waktu tunggu.
-# Ditulis dalam detik, lalu diturunkan ke bentuk yang dipakai `kubectl wait`,
-# supaya tidak ada dua satuan waktu yang beredar bersamaan.
+# Jaringan di lingkungan ini kadang sangat lambat, dan beberapa image platform
+# berukuran besar. Batas tunggu dibuat longgar supaya kegagalan yang dilaporkan
+# memang kegagalan, bukan sekadar kehabisan waktu tunggu. Ditulis dalam detik,
+# lalu diturunkan ke bentuk yang dipakai `kubectl wait`.
 WAIT_SHORT_SECS=300
-WAIT_LONG_SECS=1800
+WAIT_LONG_SECS=3600
 WAIT_SHORT="${WAIT_SHORT_SECS}s"
 WAIT_LONG="${WAIT_LONG_SECS}s"
-# WAIT_LONG dipakai oleh script yang men-source file ini, bukan di dalamnya.
-# Penelusuran `source` hanya berjalan ke arah file yang dibaca, sehingga
-# pemakaian di sisi pemanggil tidak terlihat oleh static checker.
+# WAIT_LONG dipakai oleh script yang men-source file ini, bukan di dalamnya,
+# jadi static checker tidak melihat pemakaiannya.
 # shellcheck disable=SC2034
 readonly WAIT_SHORT_SECS WAIT_LONG_SECS WAIT_SHORT WAIT_LONG
 
@@ -47,7 +45,7 @@ need() {
   command -v "$1" >/dev/null 2>&1 || fail "perintah '$1' tidak ada di PATH"
 }
 
-# kubectl selalu diarahkan ke context cluster ini supaya script tidak pernah
+# kubectl selalu diarahkan ke context cluster ini, supaya script tidak pernah
 # mengenai cluster lain yang kebetulan sedang aktif.
 kc() {
   kubectl --context "${KUBE_CONTEXT}" "$@"
@@ -81,12 +79,12 @@ apply_secret() {
 
 # Memasang atau memperbarui satu rilis Helm dari direktori chart di repo ini.
 # Selalu `upgrade --install` supaya perintah yang sama berlaku untuk pemasangan
-# pertama maupun pemasangan berikutnya.
+# pertama maupun berikutnya.
 #
-# Penantian resource tetap dilakukan lewat `kubectl wait` di sisi pemanggil, bukan
-# digantungkan ke --wait milik Helm: nilai bawaannya hanya menunggu hook, dan
-# perilaku penantian custom resource pada pemasangan pertama lewat
-# `upgrade --install` berbeda dari `install` biasa.
+# Penantian resource dilakukan lewat `kubectl wait` di sisi pemanggil, bukan
+# `--wait` milik Helm: nilai bawaannya cuma menunggu hook, dan penantian custom
+# resource pada pemasangan pertama lewat `upgrade --install` beda perilakunya
+# dari `install` biasa.
 helm_release() {
   local name="$1" chart="$2"
   shift 2
@@ -98,29 +96,39 @@ helm_release() {
     "$@"
 }
 
-# Mengambil satu nilai dari manifest hasil render chart. Dibaca dari hasil render,
-# bukan dari values, supaya nilai yang dipakai script dijamin sama dengan yang
-# benar-benar dikirim ke cluster — termasuk kalau nilainya ditimpa.
+# Mengambil satu nilai dari manifest hasil render chart. Dibaca dari hasil
+# render, bukan dari values, supaya nilai yang dipakai script sama persis
+# dengan yang dikirim ke cluster, termasuk kalau nilainya ditimpa.
+#
+# Gagal kalau field-nya muncul nol atau lebih dari sekali, bukan diam-diam
+# memakai kemunculan pertama. Field yang dimaksud harus tepat satu nilai;
+# kalau chart berubah dan field itu jadi muncul berkali-kali, script harus
+# berhenti dengan jelas, bukan memilih nilai yang salah tanpa disadari.
 helm_rendered_value() {
   local chart="$1" key="$2"
   shift 2
-  helm template render-only "${REPO_ROOT}/charts/${chart}" \
+  local matches count
+  matches="$(helm template render-only "${REPO_ROOT}/charts/${chart}" \
     --namespace "${APP_NAMESPACE}" \
     -f "${REPO_ROOT}/charts/${chart}/values-local.yaml" \
     "$@" \
-    | awk -v key="${key}" '$1 == key { print $2; exit }'
+    | awk -v key="${key}" '$1 == key { print $2 }')"
+  count="$(printf '%s\n' "${matches}" | grep -c .)"
+  [ "${count}" -eq 1 ] \
+    || fail "field '${key}' muncul ${count} kali di render chart ${chart}, seharusnya tepat satu"
+  printf '%s' "${matches}"
 }
 
-# Alamat nyata di belakang Service `kubernetes`, beserta argumen yang menyalurkan
+# Alamat nyata di belakang Service `kubernetes`, plus argumen yang menyalurkan
 # alamat itu ke chart database.
 #
-# Dibaca dari cluster karena nilainya berbeda tiap lingkungan dan API server tidak
-# punya Pod yang bisa diseleksi lewat label — satu-satunya cara menyebutnya di
-# NetworkPolicy adalah blok alamat. Alamat Service sendiri tidak berlaku: aturan
-# egress dievaluasi setelah alamat itu diterjemahkan ke alamat di belakangnya.
+# Dibaca dari cluster karena nilainya beda tiap lingkungan, dan API server
+# tidak punya Pod yang bisa diseleksi lewat label. Satu-satunya cara menyebutnya
+# di NetworkPolicy adalah blok alamat. Alamat Service sendiri tidak bisa dipakai:
+# aturan egress dievaluasi setelah alamat itu diterjemahkan ke alamat aslinya.
 #
 # Script yang memasang dan script yang memeriksa sama-sama memakai fungsi ini,
-# supaya keduanya merender chart dengan nilai yang persis sama.
+# supaya keduanya merender chart dengan nilai yang sama.
 API_SERVER_ADDR=""
 API_SERVER_PORT=""
 DATABASE_VALUES_ARGS=()
@@ -132,8 +140,8 @@ read_api_server_endpoint() {
     -o jsonpath='{.ports[0].port}')"
   [ -n "${API_SERVER_ADDR}" ] && [ -n "${API_SERVER_PORT}" ] \
     || fail "alamat API server tidak terbaca dari EndpointSlice 'kubernetes'"
-  # Isinya dibaca oleh script yang men-source file ini, bukan di dalamnya —
-  # pemakaian di sisi pemanggil tidak terlihat oleh static checker.
+  # Isinya dibaca oleh script yang men-source file ini, bukan di dalamnya,
+  # jadi static checker tidak melihat pemakaiannya.
   # shellcheck disable=SC2034
   DATABASE_VALUES_ARGS=(
     --set "networkPolicy.egress.apiServer.cidr=${API_SERVER_ADDR}/32"
@@ -172,9 +180,26 @@ wait_cluster_ready() {
   return 1
 }
 
+# Beberapa langkah mengunduh manifest langsung dari GitHub, yang kadang kena
+# rate limit (429) atau gangguan jaringan sesaat. Dicoba beberapa kali dengan
+# jeda sebelum benar-benar dianggap gagal.
+retry() {
+  local attempts="$1" delay="$2"
+  shift 2
+  local n=1
+  until "$@"; do
+    if [ "${n}" -ge "${attempts}" ]; then
+      return 1
+    fi
+    printf '  ... percobaan %s gagal, coba lagi dalam %ss\n' "${n}" "${delay}"
+    n=$(( n + 1 ))
+    sleep "${delay}"
+  done
+}
+
 require_cluster() {
   kind get clusters 2>/dev/null | grep -qx "${CLUSTER_NAME}" \
-    || fail "cluster kind '${CLUSTER_NAME}' belum ada — jalankan 10-cluster.sh"
+    || fail "cluster kind '${CLUSTER_NAME}' belum ada, jalankan 10-cluster.sh"
 }
 
 # Penghitung hasil untuk script pemeriksa. Seluruh pemeriksaan dijalankan sampai
@@ -190,19 +215,19 @@ check_eq() {
   if [ "${expected}" = "${actual}" ]; then
     pass "${label} (${actual})"
   else
-    bad "${label} — diharapkan '${expected}', dapat '${actual}'"
+    bad "${label}: diharapkan '${expected}', dapat '${actual}'"
   fi
 }
 
 # Menunggu alamat Gateway benar-benar melayani permintaan, bukan sekadar
-# berstatus Programmed. Condition itu menyatakan konfigurasi sudah direkonsiliasi;
-# proxy data-plane-nya sendiri masih dibangun beberapa saat sesudahnya, dan
-# permintaan pada jendela itu ditolak dengan koneksi terputus. Bedanya baru
-# terlihat pada Gateway yang baru dibuat ulang.
+# berstatus Programmed. Condition itu cuma berarti konfigurasi sudah
+# direkonsiliasi; proxy data-plane-nya masih dibangun beberapa saat sesudahnya,
+# dan permintaan di jendela itu ditolak dengan koneksi terputus. Bedanya baru
+# kelihatan pada Gateway yang baru dibuat ulang.
 #
-# Kode HTTP tidak diambil langsung dari keluaran curl: dengan -w, curl tetap
-# mencetak 000 sebelum keluar dengan status gagal, sehingga menambahkan penanda
-# lain di belakangnya menghasilkan nilai gabungan yang tidak berarti.
+# Kode HTTP tidak diambil langsung dari keluaran curl -w: curl tetap mencetak
+# 000 sebelum keluar dengan status gagal, jadi menambahkan penanda lain di
+# belakangnya menghasilkan nilai gabungan yang tidak berarti.
 gateway_http_code() {
   local path="$1" timeout_secs="${2:-${WAIT_SHORT_SECS}}"
   local deadline=$(( SECONDS + timeout_secs ))
@@ -226,9 +251,38 @@ gateway_http_code() {
   echo "${code:-gagal}"
 }
 
+# Membuka port-forward sementara ke sebuah Service, menunggu sampai bisa
+# disambungi, menjalankan satu perintah lewatnya, lalu selalu menutup
+# port-forward-nya, termasuk kalau perintahnya sendiri gagal. Dipakai untuk
+# memeriksa Prometheus/Grafana tanpa mengekspornya lewat Gateway.
+with_port_forward() {
+  local ns="$1" svc="$2" local_port="$3" remote_port="$4"
+  shift 4
+  # Proses port-forward lama yang masih menahan port ini (dari percobaan
+  # sebelumnya yang gagal dibersihkan) membuat bind baru gagal diam-diam.
+  pkill -f "port-forward.*${local_port}:${remote_port}" 2>/dev/null || true
+  kc port-forward "svc/${svc}" "${local_port}:${remote_port}" -n "${ns}" >/dev/null 2>&1 &
+  local pf_pid=$!
+  local ok=1 deadline=$(( SECONDS + 30 ))
+  while [ "${SECONDS}" -lt "${deadline}" ]; do
+    if curl -fsS -o /dev/null --max-time 2 "http://127.0.0.1:${local_port}/" 2>/dev/null; then
+      ok=0
+      break
+    fi
+    sleep 1
+  done
+  if [ "${ok}" -eq 0 ]; then
+    "$@"
+    ok=$?
+  fi
+  kill "${pf_pid}" 2>/dev/null || true
+  wait "${pf_pid}" 2>/dev/null || true
+  return "${ok}"
+}
+
 # Menghitung baris satu tabel lewat instance primary sebuah Cluster CNPG.
 # `kubectl exec` di sini dipakai untuk membaca isi database, bukan sebagai bukti
-# konektivitas jaringan — jalurnya lewat API server, bukan jaringan antar Pod.
+# konektivitas jaringan, jalurnya lewat API server, bukan jaringan antar Pod.
 psql_count() {
   local cluster="$1" table="$2" primary
   primary="$(kc get cluster "${cluster}" -n "${APP_NAMESPACE}" -o jsonpath='{.status.currentPrimary}')"

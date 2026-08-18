@@ -2,10 +2,10 @@
 # Membuktikan backup benar-benar bisa dipulihkan: membuat Cluster baru dari
 # backup, membandingkan jumlah baris dengan sumbernya, lalu menghapusnya lagi.
 #
-# Dipisah dari 50-verify.sh karena durasinya jauh berbeda — pemeriksaan di sana
-# selesai dalam hitungan detik, sedangkan pemulihan di sini menunggu Cluster baru
-# dibangun. Menggabungkan keduanya membuat pemeriksaan cepat ikut tersandera dan
-# praktis tidak pernah dijalankan.
+# Dipisah dari 50-verify.sh karena durasinya jauh berbeda. Pemeriksaan di sana
+# selesai dalam hitungan detik, pemulihan di sini menunggu Cluster baru dibangun. 
+# Menggabungkan keduanya membuat pemeriksaan cepat ikut tersandera 
+# dan praktis tidak pernah dijalankan.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 need kubectl
@@ -24,12 +24,11 @@ cleanup() {
 log "Membersihkan sisa uji sebelumnya"
 cleanup
 
-# Acuan pembanding diambil sebelum Cluster restore dibuat, lalu dipakai apa
-# adanya. Membaca ulang sumber setelah pemulihan selesai membuat perbandingan
-# ikut bergerak kalau sumbernya berubah di tengah jalan, sehingga restore yang
-# benar bisa dilaporkan gagal.
-#
-# Pembandingan ini mengandaikan sumber tidak ditulisi selama uji berjalan.
+# Acuan pembanding diambil sebelum Cluster restore dibuat, lalu dipakai apa adanya. 
+# Membaca ulang sumber setelah pemulihan selesai membuat perbandingan
+# ikut bergerak kalau sumbernya berubah di tengah jalan, jadi restore yang
+# benar bisa terlaporkan gagal. Perbandingan ini mengandaikan sumber tidak
+# ditulisi selama uji berjalan.
 log "Mencatat acuan dari cluster sumber"
 declare -A EXPECTED
 for table in Project Category User; do
@@ -48,7 +47,7 @@ if wait_cluster_ready "${DRILL_CLUSTER}"; then
     if [ "${expected}" = "${actual}" ]; then
       pass "${table} (${actual})"
     else
-      bad "${table} — acuan ${expected}, hasil restore ${actual}"
+      bad "${table}: acuan ${expected}, hasil restore ${actual}"
     fi
   done
 else
