@@ -5,7 +5,7 @@
 # Sengaja TIDAK memuat `.spec.plugins`: tanpa blok itu cluster hasil restore
 # tidak ikut mengarsip WAL. Kalau diaktifkan, cluster ini mulai menulis ke
 # object storage begitu jadi primary, dan sisa arsip itu membuat uji restore
-# berikutnya dengan nama yang sama ditolak ("Expected empty archive") — padahal
+# berikutnya dengan nama yang sama ditolak ("Expected empty archive"), padahal
 # cluster pembanding tidak pernah butuh mengarsip apa pun.
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster

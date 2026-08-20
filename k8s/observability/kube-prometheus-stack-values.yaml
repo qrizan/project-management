@@ -45,8 +45,8 @@ alertmanager:
       limits:
         memory: 128Mi
 
-# Kredensial admin dibuat lewat openssl rand oleh reproduce script, sama seperti
-# Secret lain di repo ini — tidak ada nilai default yang masuk Git.
+# Kredensial admin dibuat lewat openssl rand oleh reproduce script, sama
+# seperti Secret lain di repo ini. Tidak ada nilai default yang masuk Git.
 grafana:
   persistence:
     enabled: false

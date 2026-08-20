@@ -138,8 +138,9 @@ read_api_server_endpoint() {
     -o jsonpath='{.endpoints[0].addresses[0]}')"
   API_SERVER_PORT="$(kc get endpointslice kubernetes -n default \
     -o jsonpath='{.ports[0].port}')"
-  [ -n "${API_SERVER_ADDR}" ] && [ -n "${API_SERVER_PORT}" ] \
-    || fail "alamat API server tidak terbaca dari EndpointSlice 'kubernetes'"
+  if [ -z "${API_SERVER_ADDR}" ] || [ -z "${API_SERVER_PORT}" ]; then
+    fail "alamat API server tidak terbaca dari EndpointSlice 'kubernetes'"
+  fi
   # Isinya dibaca oleh script yang men-source file ini, bukan di dalamnya,
   # jadi static checker tidak melihat pemakaiannya.
   # shellcheck disable=SC2034

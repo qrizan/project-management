@@ -148,6 +148,10 @@ Manifest cluster dan platform ada di `k8s/`; database dan aplikasi dipasang seba
 ```
 scripts/reproduce/run-all.sh --clean
 ```
+atau
+```
+scripts/reproduce/run-all.sh --clean 2>&1 | tee scripts/reproduce/output.txt
+```
 
 Menghapus cluster kind sebelumnya (kalau ada), membangun cluster baru, memasang seluruh komponen platform (cert-manager, CloudNativePG, Envoy Gateway, metrics-server), object storage backup, database dan aplikasi, lalu observability (Prometheus/Grafana/Alertmanager). Ditutup dengan pemeriksaan otomatis: kesehatan Pod, penegakan NetworkPolicy, jalur HTTP lewat Gateway, alert yang bisa dipicu, dan uji restore backup.
 

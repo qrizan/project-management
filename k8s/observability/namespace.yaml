@@ -1,8 +1,9 @@
 # node-exporter (bagian dari kube-prometheus-stack) butuh hostNetwork, hostPID,
-# dan hostPath volume untuk membaca metrik node lewat /proc dan /sys — ketiganya
-# dilarang eksplisit bahkan oleh kebijakan baseline, bukan cuma restricted
-# (Kubernetes Pod Security Standards). 
-# Namespace ini privileged, berbeda dari project-management dan garage yang tetap restricted.
+# dan hostPath volume untuk membaca metrik node lewat /proc dan /sys.
+# Ketiganya dilarang eksplisit bahkan oleh kebijakan baseline, bukan cuma
+# restricted (Kubernetes Pod Security Standards).
+# Namespace ini privileged, berbeda dari project-management dan garage yang
+# tetap restricted.
 apiVersion: v1
 kind: Namespace
 metadata:

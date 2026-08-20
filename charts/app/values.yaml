@@ -5,13 +5,19 @@ fullnameOverride: ""
 image:
   repository: project-management-app
   tag: runner
+  # Kosong berarti dirender sebagai repository:tag. Terisi (mis. sha256:...)
+  # berarti dirender sebagai repository@digest, tag diabaikan.
+  # Dipakai rilis yang di-sync Argo CD supaya mengikat ke artefak yang
+  # benar-benar discan dan ditandatangani, bukan ke tag yang secara teori
+  # bisa di-overwrite di registry.
+  digest: ""
   # IfNotPresent, bukan Always: image dibangun di host lalu dimuat ke node dan
   # tidak ada di registry mana pun, sehingga penarikan ulang pasti gagal.
   pullPolicy: IfNotPresent
 
 # Hanya berlaku kalau autoscaling.enabled bernilai false. Saat HPA aktif, field
 # replicas sengaja tidak dirender supaya jumlah replika sepenuhnya dikendalikan
-# HPA — kalau ditulis, setiap penerapan ulang mengembalikannya ke angka statis
+# HPA. Kalau ditulis, setiap penerapan ulang mengembalikannya ke angka statis
 # dan membatalkan hasil penskalaan.
 replicaCount: 1
 
@@ -29,7 +35,7 @@ resources:
     memory: 256Mi
 
 # Halaman publik yang dipakai sebagai probe. Belum memverifikasi koneksi
-# database — Pod dinyatakan siap selama proses Next.js melayani HTTP, walau
+# database. Pod dinyatakan siap selama proses Next.js melayani HTTP, walau
 # database sedang tidak terjangkau.
 probes:
   path: /auth/signin
@@ -52,7 +58,7 @@ gateway:
   # Nama GatewayClass yang dipasang bersama implementasi Gateway API di cluster.
   className: eg
   port: 80
-  # Kosong berarti HTTPRoute tanpa hostnames — rute menerima permintaan dengan
+  # Kosong berarti HTTPRoute tanpa hostnames, rute menerima permintaan dengan
   # Host apa pun. Dipakai saat aplikasi dijangkau lewat alamat IP LoadBalancer
   # dan belum ada nama domain.
   hostname: ""
@@ -126,5 +132,5 @@ networkPolicy:
 
   # Jalur keluar tidak diatur chart ini. Resolusi nama dan akses ke database
   # ditetapkan sebagai baseline namespace, karena migrasi skema berjalan sebagai
-  # hook — dijalankan sebelum resource rilis dibuat, sehingga aturan yang ikut
-  # rilis belum ada saat Pod migrasi membutuhkannya.
+  # hook, dijalankan sebelum resource rilis dibuat. Aturan yang ikut rilis
+  # belum ada saat Pod migrasi membutuhkannya.

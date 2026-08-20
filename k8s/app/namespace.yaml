@@ -8,7 +8,7 @@ metadata:
     pod-security.kubernetes.io/warn: restricted
 ---
 # Tanpa policy default-deny, Pod yang tidak diseleksi policy mana pun menerima
-# trafik dari seluruh cluster — termasuk Pod Job yang hidup sebentar. Namespace
+# trafik dari seluruh cluster, termasuk Pod Job yang hidup sebentar. Namespace
 # ditutup lebih dulu, lalu jalur yang memang dibutuhkan dibuka satu per satu oleh
 # rilis yang memilikinya.
 #
@@ -71,7 +71,7 @@ spec:
 # Pasangan dari aturan masuk di sisi database, yang menyeleksi label yang sama.
 #
 # Ditulis sebagai baseline namespace, bukan sebagai bagian rilis aplikasi, karena
-# migrasi skema berjalan sebagai hook — dan hook selalu dijalankan sebelum
+# migrasi skema berjalan sebagai hook, dan hook selalu dijalankan sebelum
 # resource rilis dibuat. Aturan yang ikut rilis baru ada beberapa saat setelah
 # Pod yang membutuhkannya mati, sehingga migrasi tidak pernah bisa terhubung.
 apiVersion: networking.k8s.io/v1

@@ -17,7 +17,7 @@ data:
     # rpc_secret sengaja tidak ditulis di sini. Nilainya disuntik lewat env
     # GARAGE_RPC_SECRET supaya tidak perlu file rahasia di dalam container:
     # Garage menolak start kalau file rahasianya bisa dibaca selain pemiliknya,
-    # sementara volume Secret dimiliki root — tidak terbaca oleh proses non-root.
+    # sementara volume Secret dimiliki root. Tidak terbaca oleh proses non-root.
 
     [s3_api]
     # Garage bukan AWS, jadi region harus diset eksplisit. Client S3 memakai
@@ -29,5 +29,5 @@ data:
     [admin]
     api_bind_addr = "[::]:3903"
     # admin_token disuntik lewat env GARAGE_ADMIN_TOKEN. Port ini tidak
-    # dipublikasikan lewat Service — hanya dijangkau lewat port-forward saat
+    # dipublikasikan lewat Service, hanya dijangkau lewat port-forward saat
     # inspeksi manual.

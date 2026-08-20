@@ -16,7 +16,7 @@ spec:
 #
 # Diseleksi lewat keberadaan kunci label `cnpg.io/cluster`, bukan nilainya.
 # Cluster hasil uji restore memakai nama berbeda dari cluster sumber, sehingga
-# aturan yang mematok satu nama akan memblokir pemulihan — dan gejalanya berupa
+# aturan yang mematok satu nama akan memblokir pemulihan. Gejalanya berupa
 # Cluster yang menggantung tanpa menyebut jaringan sama sekali.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

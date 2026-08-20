@@ -11,7 +11,7 @@ dan chart yang membuatnya.
 
 Sengaja tidak dipakai di label Pod maupun di selector. Nilai helm.sh/chart
 berubah setiap versi chart naik, sehingga menaruhnya di template Pod akan memicu
-rollout hanya karena penomoran chart berubah — bukan karena aplikasinya berubah.
+rollout hanya karena penomoran chart berubah, bukan karena aplikasinya berubah.
 */}}
 {{- define "app.labels" -}}
 helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
@@ -32,8 +32,8 @@ app: project-management
 
 {{/*
 Menandai Pod sebagai klien database. Terpisah dari label identitas di atas supaya
-Pod Job bisa mendapat izin ke PostgreSQL tanpa ikut terseleksi Service aplikasi —
-kalau labelnya disamakan, trafik dari Gateway sesekali mendarat di Pod Job.
+Pod Job bisa mendapat izin ke PostgreSQL tanpa ikut terseleksi Service aplikasi.
+Kalau labelnya disamakan, trafik dari Gateway sesekali mendarat di Pod Job.
 */}}
 {{- define "app.databaseClientLabel" -}}
 {{ .Values.databaseClientLabel.key }}: {{ .Values.databaseClientLabel.value | quote }}

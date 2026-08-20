@@ -8,7 +8,7 @@ metadata:
   annotations:
     # Objek ini tidak ikut terhapus saat rilis dicabut. PersistentVolumeClaim
     # milik cluster dimiliki oleh objek Cluster lewat ownerReference, sehingga
-    # menghapusnya berarti menghapus data PostgreSQL — akibat yang terlalu berat
+    # menghapusnya berarti menghapus data PostgreSQL. Akibat yang terlalu berat
     # untuk dipicu oleh satu perintah pencabutan rilis.
     helm.sh/resource-policy: keep
 spec:

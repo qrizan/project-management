@@ -43,7 +43,7 @@ backup:
     endpointURL: ""
 
     # Format retensi CNPG: angka diikuti satuan d, w, atau m. Merupakan recovery
-    # window — backup yang tidak lagi dibutuhkan untuk memulihkan ke titik mana
+    # window, backup yang tidak lagi dibutuhkan untuk memulihkan ke titik mana
     # pun dalam rentang ini akan dihapus.
     retentionPolicy: "30d"
 
@@ -59,14 +59,14 @@ backup:
 
   # Backup sekali jalan sengaja tidak ada di chart ini. Objek Backup CNPG adalah
   # perintah "ambil backup sekarang", bukan keadaan yang diinginkan, dan hasilnya
-  # bergantung pada isi database saat itu — backup yang diambil sebelum data
+  # bergantung pada isi database saat itu. Backup yang diambil sebelum data
   # dimuat menghasilkan titik pemulihan kosong. Chart tidak bisa menyatakan
   # "setelah data ada", jadi pemicunya ada di script yang memasang.
 
   scheduled:
     enabled: true
     name: postgres-scheduled-backup
-    # CNPG memakai cron enam kolom — kolom pertama adalah detik. Ekspresi lima
+    # CNPG memakai cron enam kolom, kolom pertama adalah detik. Ekspresi lima
     # kolom hanya menghasilkan peringatan, bukan penolakan, sehingga salah
     # format tidak langsung terlihat.
     schedule: "0 0 2 * * *"
@@ -86,7 +86,7 @@ networkPolicy:
   # Tanpa aturan ini Cluster berstatus error walau PostgreSQL sendiri sehat, dan
   # pesan errornya tidak menyebut jaringan sama sekali.
   #
-  # Berlaku untuk seluruh Cluster CNPG di namespace ini — diseleksi lewat
+  # Berlaku untuk seluruh Cluster CNPG di namespace ini, diseleksi lewat
   # keberadaan kunci label, bukan satu nama cluster, karena cluster yang dibuat
   # untuk uji pemulihan bernama lain dan sama-sama perlu dipantau operator.
   operatorStatus:
@@ -95,7 +95,7 @@ networkPolicy:
     operatorNamespace: cnpg-system
     port: 8000
 
-  # Jalur keluar Pod PostgreSQL. Resolusi nama tidak diatur di sini — sudah
+  # Jalur keluar Pod PostgreSQL. Resolusi nama tidak diatur di sini, sudah
   # dibuka untuk seluruh namespace di luar chart.
   egress:
     enabled: true
@@ -110,8 +110,8 @@ networkPolicy:
     # di belakangnya. Nilainya berbeda tiap cluster, jadi diisi oleh pemasang.
     #
     # Efek aturan ini belum terverifikasi. Diuji langsung pada cluster kind,
-    # tujuan berupa alamat node tetap terjangkau meski seluruh egress ditolak —
-    # penegakan di sana hanya berlaku untuk tujuan berupa Pod. Aturan tetap
+    # tujuan berupa alamat node tetap terjangkau meski seluruh egress ditolak.
+    # Penegakan di sana hanya berlaku untuk tujuan berupa Pod. Aturan tetap
     # ditulis karena dibutuhkan di lingkungan yang menegakkan blok alamat, dan
     # membiarkannya kosong akan memutus akses instance manager di sana.
     apiServer:

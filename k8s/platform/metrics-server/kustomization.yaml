@@ -10,9 +10,9 @@ resources:
 patches:
 # kubelet di node kind memakai sertifikat serving yang ditandatangani sendiri
 # dan tidak diterbitkan ulang oleh cluster CA, sehingga metrics-server menolak
-# koneksinya. Flag ini mematikan verifikasi sertifikat kubelet — pelonggaran
-# yang diterima karena lingkungannya lokal sekali pakai, bukan default yang
-# boleh dibawa ke lingkungan lain.
+# koneksinya. Flag ini mematikan verifikasi sertifikat kubelet.
+# Pelonggaran yang diterima karena lingkungannya lokal sekali pakai, bukan
+# default yang boleh dibawa ke lingkungan lain.
 - target:
     kind: Deployment
     name: metrics-server

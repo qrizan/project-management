@@ -11,7 +11,7 @@ metadata:
     # aplikasi yang baru mulai melayani permintaan.
     #
     # Job bersifat immutable, sehingga pembaruan hanya bisa diterapkan dengan
-    # menghapus Job sebelumnya lebih dulu — itu yang dilakukan before-hook-creation.
+    # menghapus Job sebelumnya lebih dulu. Itu yang dilakukan before-hook-creation.
     # Job yang sudah selesai sengaja tidak ikut dihapus supaya log-nya masih bisa
     # dibaca setelah pemasangan.
     "helm.sh/hook": pre-install,pre-upgrade
