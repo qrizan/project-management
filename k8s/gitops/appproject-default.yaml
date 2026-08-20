@@ -1,0 +1,23 @@
+# AppProject "default" biasanya dibuat otomatis oleh API server Argo CD saat
+# start. Argo CD Core tidak menjalankan API server, jadi objek ini tidak
+# pernah tercipta dengan sendirinya. Tanpa ini, Application yang menyebut
+# project: default gagal InvalidSpecError permanen (appproject.argoproj.io
+# "default" not found), sync/health macet di Unknown tanpa pernah berubah.
+#
+# Nilai field persis sama dengan default yang didokumentasikan Argo CD
+# sendiri untuk project "default" (paling longgar, dipakai apa adanya untuk
+# satu Application di cluster ini).
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: argocd
+spec:
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: '*'
+      server: '*'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

@@ -27,7 +27,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
       id-token: write
     steps:
@@ -81,3 +81,41 @@ jobs:
 
       - name: Sign image (keyless)
         run: cosign sign --yes "${{ steps.digest.outputs.ref }}"
+
+      - name: Bump GitOps values
+        env:
+          DIGEST_REF: ${{ steps.digest.outputs.ref }}
+        run: |
+          digest="${DIGEST_REF#*@}"
+          sed -i "s|^  tag: .*|  tag: ${GITHUB_SHA}|" charts/app/values-deploy.yaml
+          sed -i "s|^  digest: .*|  digest: ${digest}|" charts/app/values-deploy.yaml
+          grep -q "  tag: ${GITHUB_SHA}" charts/app/values-deploy.yaml
+          grep -q "  digest: ${digest}" charts/app/values-deploy.yaml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add charts/app/values-deploy.yaml
+
+          if git diff --staged --quiet; then
+            echo "values-deploy.yaml sudah mengarah ke tag/digest ini, tidak ada yang di-commit."
+            exit 0
+          fi
+
+          # [skip ci] mencegah commit bump ini memicu run CI baru di repo yang
+          # sama, sebab checkout di atas ada di project-management sendiri
+          # (bukan repo terpisah seperti desain sebelumnya).
+          git commit -m "Bump image to ${GITHUB_SHA} [skip ci]"
+
+          success=0
+          for i in 1 2 3 4 5; do
+            if git push; then
+              success=1
+              break
+            fi
+            git pull --rebase
+            sleep $((i * 3))
+          done
+          if [ "$success" -ne 1 ]; then
+            echo "::error::gagal push bump values-deploy.yaml ke main setelah 5 percobaan"
+            exit 1
+          fi

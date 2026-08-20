@@ -1,0 +1,41 @@
+# Application Argo CD, single-source: chart dan values sama-sama dari repo
+# project-management, dibaca lewat deploy key read-only khusus repo ini
+# (dipasang di 46-gitops.sh, Secret bertipe "repository").
+#
+# Desain sebelumnya (multi-source: chart dari repo ini + values dari repo
+# GitOps terpisah lewat mekanisme ref) dibatalkan setelah terbukti kena bug
+# upstream argoproj/argo-cd#16747 (endpoint refs pada source ber-ref di
+# Application multi-source tidak menerapkan kredensial repo privat manapun).
+# Uji isolasi single-source membuktikan akses repo privat lewat deploy key
+# sendiri berfungsi normal, lihat CD.md.
+#
+# project: default dipakai apa adanya (k8s/gitops/appproject-default.yaml).
+# Argo CD Core tidak membuat AppProject kustom, dan cluster ini cuma
+# menjalankan satu Application.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: project-management-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:qrizan/project-management.git
+    targetRevision: main
+    path: charts/app
+    helm:
+      # Default Argo CD memakai nama Application ini sebagai release Helm
+      # (project-management-app), bukan "app". Chart menurunkan nama semua
+      # objek dari nama release (app.fullname di _helpers.tpl), dan
+      # 45-helm-lifecycle.sh/46-gitops.sh mengasumsikan nama objeknya "app".
+      releaseName: app
+      valueFiles:
+        - values.yaml
+        - values-deploy.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: project-management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

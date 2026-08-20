@@ -1,0 +1,16 @@
+# Nilai yang dibaca lewat Argo CD (k8s/gitops/application.yaml), dipakai
+# bersama values.yaml. repository tetap (rilis yang di-sync Argo CD selalu
+# datang dari GHCR, beda dari default values.yaml yang mengasumsikan image
+# lokal hasil kind load). tag dan digest di-bump otomatis oleh job
+# build-scan-push di ci.yml setiap push ke main yang lolos gate Trivy dan
+# cosign sign, lewat commit langsung ke file ini (pesan commit memuat
+# [skip ci]). Bukan dieksekusi tangan di luar CI setelah bootstrap ini.
+image:
+  repository: ghcr.io/qrizan/project-management
+  tag: e18a3c2a591cfd82c27a64145b5a591ab6a7ce3e
+  digest: sha256:e394fdb888ff28317bb601bf312dc771ab4bfb2884dc2107d55ad2ba74eca43a
+
+# Data contoh dimuat, sama seperti values-local.yaml, supaya rilis yang
+# di-sync Argo CD punya data yang bisa dibandingkan dengan uji lain.
+seed:
+  enabled: true
