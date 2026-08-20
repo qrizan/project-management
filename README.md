@@ -2,7 +2,7 @@
 
 Aplikasi manajemen proyek/tugas (Next.js App Router + Prisma + PostgreSQL), dengan tampilan Tailwind/Flowbite React, di-orkestrasi di atas Kubernetes lewat Helm, CI/CD, dan observability.
 
-Dokumen lain di repo ini: [ARCHITECTURE.md](ARCHITECTURE.md) untuk bentuk teknis sistem, [DECISION.md](DECISION.md) untuk keputusan desain dan alasannya, [SECURITY.md](SECURITY.md) untuk kontrol keamanan yang diterapkan.
+Dokumen lain di repo ini: [ARCHITECTURE.md](ARCHITECTURE.md) untuk bentuk teknis sistem, [DECISION.md](DECISION.md) untuk keputusan desain dan alasannya, [SECURITY.md](SECURITY.md) untuk kontrol keamanan yang diterapkan, [DEVELOPMENT.md](DEVELOPMENT.md) untuk alur CI/CD dan GitOps.
 
 ### Built with
 
@@ -32,7 +32,8 @@ Dokumen lain di repo ini: [ARCHITECTURE.md](ARCHITECTURE.md) untuk bentuk teknis
 │   ├── platform/           # GatewayClass, metrics-server
 │   ├── garage/             # object storage (S3-compatible) for backup
 │   ├── app/                # namespace baseline, restore test cluster, seed SQL
-│   └── observability/      # monitoring namespace, kube-prometheus-stack values, alert rule
+│   ├── observability/      # monitoring namespace, kube-prometheus-stack values, alert rule
+│   └── gitops/             # Argo CD Application + AppProject
 │
 ├── charts/                 # Helm charts, installed as two separate releases
 │   ├── database/           # PostgreSQL Cluster, ObjectStore, ScheduledBackup
@@ -46,6 +47,7 @@ Dokumen lain di repo ini: [ARCHITECTURE.md](ARCHITECTURE.md) untuk bentuk teknis
 │   ├── 30-storage.sh
 │   ├── 40-app.sh
 │   ├── 45-helm-lifecycle.sh
+│   ├── 46-gitops.sh
 │   ├── 47-observability.sh
 │   ├── 48-alert-drill.sh
 │   ├── 50-verify.sh
@@ -178,4 +180,4 @@ Perintah kedua menghapus build cache Docker, bukan cuma image proyek ini; image 
 
 ## CI/CD
 
-Setiap push ke `main` menjalankan lint, typecheck, build image, scan kerentanan (gate blocking pada temuan critical), generate SBOM, push ke GitHub Container Registry, dan signing image dengan cosign keyless. Lihat `.github/workflows/ci.yml`.
+Setiap push ke `main` menjalankan lint, typecheck, build image, scan kerentanan (gate blocking pada temuan critical), generate SBOM, push ke GitHub Container Registry, signing image dengan cosign keyless, lalu bump tag image di chart aplikasi. Argo CD mensinkronkan rilis aplikasi ke cluster otomatis dari perubahan itu, tanpa `kubectl apply`/`helm upgrade` manual. Detail lengkap di [DEVELOPMENT.md](DEVELOPMENT.md).

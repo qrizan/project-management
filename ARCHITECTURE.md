@@ -96,7 +96,7 @@ flowchart TB
 
 Tiap namespace ditutup dengan `NetworkPolicy` default-deny (ingress dan egress), lalu dibuka selektif seperti digambarkan di atas, plus DNS ke CoreDNS untuk seluruh Pod.
 
-Aturan yang menyeleksi Pod PostgreSQL memakai keberadaan label cluster CloudNativePG, bukan nilai spesifiknya, supaya Cluster tambahan (misalnya untuk uji restore) otomatis tercakup aturan yang sama tanpa perlu diubah.
+Aturan yang menyeleksi Pod PostgreSQL memakai keberadaan label cluster CloudNativePG, bukan nilai spesifiknya. Alasannya ada di [DECISION.md](DECISION.md).
 
 Penegakan egress lintas namespace di CNI kind ini tidak seragam: trafik dalam namespace terbukti tertegakkan, sementara beberapa tujuan di luar namespace tetap terjangkau meski aturan deny aktif. Detail dan status kontrol keamanan yang berlaku ada di [SECURITY.md](SECURITY.md).
 
@@ -110,10 +110,13 @@ flowchart LR
     scan -->|pass| sbom["SBOM\nCycloneDX"]
     sbom --> ghcr[("push to GHCR\ntag: commit SHA")]
     ghcr --> sign["cosign sign\nkeyless (OIDC)"]
+    sign --> bump["bump values-deploy.yaml\ncommit [skip ci]"]
     scan -->|fail| stop(["pipeline stops"])
 ```
 
 GitHub Actions, dua job: `lint-typecheck` berjalan di setiap push dan pull request; `build-scan-push` berjalan hanya pada push ke branch utama setelah `lint-typecheck` lolos. Image yang gagal gate Trivy tidak pernah sampai ke registry.
+
+Rilis aplikasi disinkronkan ke cluster lewat Argo CD (GitOps), bukan `helm upgrade` manual, memakai commit bump di atas sebagai pemicu. Detail alur CI/CD lengkap ada di [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Observability
 

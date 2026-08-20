@@ -1,5 +1,5 @@
-# Alert rule khusus untuk membuktikan DoD Fase 6 ("minimal 1 alert rule yang bisa dipicu sengaja"), 
-# bukan indikator masalah produksi. 
+# Alert rule khusus untuk membuktikan jalur alerting bisa dipicu sengaja dan
+# berulang, bukan indikator masalah produksi.
 # `for: 30s` sengaja pendek - alert bawaan chart seperti KubePodCrashLooping pakai `for: 15m`,
 # terlalu lama untuk dipakai sebagai pemeriksaan yang diulang tiap reproduce.
 #

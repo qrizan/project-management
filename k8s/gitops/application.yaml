@@ -2,13 +2,6 @@
 # project-management, dibaca lewat deploy key read-only khusus repo ini
 # (dipasang di 46-gitops.sh, Secret bertipe "repository").
 #
-# Desain sebelumnya (multi-source: chart dari repo ini + values dari repo
-# GitOps terpisah lewat mekanisme ref) dibatalkan setelah terbukti kena bug
-# upstream argoproj/argo-cd#16747 (endpoint refs pada source ber-ref di
-# Application multi-source tidak menerapkan kredensial repo privat manapun).
-# Uji isolasi single-source membuktikan akses repo privat lewat deploy key
-# sendiri berfungsi normal, lihat CD.md.
-#
 # project: default dipakai apa adanya (k8s/gitops/appproject-default.yaml).
 # Argo CD Core tidak membuat AppProject kustom, dan cluster ini cuma
 # menjalankan satu Application.

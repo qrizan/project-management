@@ -13,9 +13,8 @@
 # Helm "app" langsung lewat CLI, sementara Argo CD (selfHeal+prune aktif)
 # mengawasi rilis yang sama dan akan menyinkronkannya balik ke state git
 # begitu ada drift. Dua pengontrol memperebutkan objek yang sama tanpa
-# koordinasi. Belum diuji, dan tidak dijadikan bagian DoD mana pun -
-# seluruh "Verifikasi" di CD.md/PLAN.md memakai --clean. Jalankan --clean
-# setiap kali reproduce dipakai untuk verifikasi.
+# koordinasi, dan jalur ini belum diuji. Jalankan --clean setiap kali
+# reproduce dipakai untuk verifikasi.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 HERE="$(dirname "${BASH_SOURCE[0]}")"

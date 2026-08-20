@@ -13,12 +13,12 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 need kubectl
 require_cluster
 
-# Dibuat manual sekali di luar reproduce (CD.md langkah 5), stabil lintas run.
+# Dibuat manual sekali di luar reproduce, stabil lintas run.
 # Beda dari Secret lain di script ini yang selalu di-generate ulang.
 # Path lewat env var, default sesuai path yang dipakai saat key ini dibuat.
 ARGOCD_REPO_KEY_PATH="${ARGOCD_REPO_KEY_PATH:-${HOME}/.ssh/pm-argocd-readonly}"
 [ -f "${ARGOCD_REPO_KEY_PATH}" ] \
-  || fail "deploy key tidak ditemukan di ${ARGOCD_REPO_KEY_PATH} (lihat CD.md langkah 5 untuk cara membuatnya)"
+  || fail "deploy key tidak ditemukan di ${ARGOCD_REPO_KEY_PATH}, buat SSH deploy key read-only untuk repo ini di path tersebut"
 
 # GitHub tidak punya cara otomatis membuat personal access token, jadi ini
 # dibuat manual sekali di luar reproduce, sama seperti deploy key di atas.
@@ -27,7 +27,7 @@ ARGOCD_REPO_KEY_PATH="${ARGOCD_REPO_KEY_PATH:-${HOME}/.ssh/pm-argocd-readonly}"
 # dibutuhkan node cluster untuk pull-nya.
 GHCR_PULL_TOKEN_PATH="${GHCR_PULL_TOKEN_PATH:-${HOME}/.ghcr-pull-token}"
 [ -f "${GHCR_PULL_TOKEN_PATH}" ] \
-  || fail "token GHCR tidak ditemukan di ${GHCR_PULL_TOKEN_PATH} (lihat CD.md untuk cara membuatnya)"
+  || fail "token GHCR tidak ditemukan di ${GHCR_PULL_TOKEN_PATH}, buat personal access token GitHub scope read:packages di path tersebut"
 
 log "Namespace argocd"
 kc create namespace argocd --dry-run=client -o yaml | kc apply -f -
@@ -77,10 +77,8 @@ log "AppProject default"
 kc apply -f "${REPO_ROOT}/k8s/gitops/appproject-default.yaml"
 
 # Secret bertipe "repository" (per-repo, exact match dengan repoURL di
-# application.yaml). Cocok untuk source tunggal yang dirujuk langsung, beda
-# dari desain multi-source sebelumnya yang butuh workaround "repo-creds"
-# karena kena bug argoproj/argo-cd#16747 pada mekanisme ref. Single-source
-# tidak lewat jalur itu, dibuktikan lewat uji isolasi manual (CD.md).
+# application.yaml), dipakai argocd-repo-server untuk autentikasi git saat
+# membaca chart dan values.
 log "Kredensial pull image GHCR"
 kc create secret docker-registry ghcr-pull-secret -n "${APP_NAMESPACE}" \
   --docker-server=ghcr.io \

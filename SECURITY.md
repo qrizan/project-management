@@ -15,6 +15,7 @@ Kontrol keamanan yang benar-benar diterapkan di proyek ini. Status ditulis apa a
 ## Secret Management
 
 - Seluruh Secret (kredensial database, kredensial object storage, secret sesi aplikasi) dibuat oleh script provisioning dengan nilai yang di-generate saat pemasangan. Tidak ada manifest Secret maupun nilai kredensial produksi yang masuk version control.
+- Dua kredensial lain punya siklus hidup berbeda: dibuat manual di luar repo (bukan di-generate script), dibaca script provisioning dari path lokal, disuntik ke cluster sebagai Secret. Deploy key SSH read-only khusus satu repo ini, dipakai Argo CD membaca chart lewat git. Personal access token GitHub scope `read:packages`, dipakai sebagai `imagePullSecret` supaya cluster bisa menarik image aplikasi yang ikut privat mengikuti visibilitas repo sumbernya. Detail alur ada di [DEVELOPMENT.md](DEVELOPMENT.md).
 - Rahasia internal Garage (RPC secret, admin token) disuntik lewat environment variable, bukan file. Ini juga yang memungkinkan proses Garage berjalan sebagai user non-root tanpa masalah permission pada file rahasia.
 - Satu pengecualian sadar: hash bcrypt satu akun demo ada di file konfigurasi yang di-commit, supaya hasil seed data identik tiap kali dijalankan ulang. Akibatnya kredensial demo ini permanen di riwayat repo, dan karena itu tidak dipakai di environment yang terjangkau publik.
 
@@ -49,11 +50,15 @@ Tiap image yang dibangun di pipeline CI melewati urutan berikut sebelum sampai k
 
 Image yang gagal langkah 1 tidak pernah sampai ke langkah berikutnya.
 
+## GitOps Access Scope
+
+Argo CD memakai AppProject `default` bawaan tanpa pembatasan: source repo, namespace tujuan, dan jenis resource cluster-scoped semuanya wildcard (`*`). Diterima apa adanya karena cluster ini cuma menjalankan satu `Application` dan Argo CD Core tidak membuat AppProject kustom. Pembatasan project baru relevan kalau ada `Application` kedua dengan kepemilikan berbeda.
+
 ## Known Limitations
 
 | Limitation | Detail |
 | :--- | :--- |
-| Password hash di response API | Satu endpoint mengembalikan hash password di response-nya. Temuan pada kode aplikasi yang diwariskan, di luar cakupan pekerjaan yang sedang berjalan pada proyek ini. |
+| Password hash di response API | Dua endpoint (create dan update user) mengembalikan hash password di response-nya. Temuan pada kode aplikasi yang diwariskan, di luar cakupan pekerjaan yang sedang berjalan pada proyek ini. |
 | Cek role hilang di sebagian endpoint | Satu grup endpoint tidak memeriksa role administratif sebelum mengizinkan operasi tulis. Sama seperti di atas, dicatat eksplisit, belum diperbaiki. |
 | Database tanpa replikasi | Tidak ada failover otomatis kalau instance database gagal. Cadangan data tetap diambil kontinu dan diverifikasi bisa dipulihkan. |
 | Dependency belum sepenuhnya diaudit | Baseline audit dependency mencatat ratusan kerentanan di seluruh pohon dependency, termasuk transitif. Remediasi berjalan bertahap lewat gate pemindaian pada pipeline build, bukan sekaligus. |

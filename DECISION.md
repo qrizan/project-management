@@ -12,7 +12,7 @@ Dependency di-install dan aplikasi di-build memakai bun. Container produksi menj
 
 ## Prisma Migrations Are Committed to Version Control
 
-File migrasi database (`prisma/migrations`) di-commit ke repo, bukan di-generate ulang tiap deployment.
+File migrasi database (`prisma/migrations`) di-commit ke repo.
 
 **Rationale.** Migrasi database perlu urutan dan riwayat yang deterministik lintas environment. Fresh clone atau environment baru butuh riwayat migrasi yang sama persis dengan yang sudah pernah diterapkan, bukan hasil generate ulang yang bisa berbeda.
 
@@ -28,7 +28,7 @@ Objek database (Cluster PostgreSQL, object storage backup, jadwal backup) dipasa
 
 ## Migration and Seed as Idempotent Helm Hooks
 
-Migrasi skema dan pengisian data awal dijalankan sebagai Job yang di-trigger otomatis oleh siklus hidup rilis Helm (sebelum dan sesudah install/upgrade), bukan langkah manual terpisah.
+Migrasi skema dan pengisian data awal dijalankan sebagai Job yang di-trigger otomatis oleh siklus hidup rilis Helm (sebelum dan sesudah install/upgrade).
 
 **Rationale.** Job Kubernetes bersifat immutable; upgrade rilis pada Job bernama sama akan ditolak tanpa mekanisme penggantian eksplisit. Menjadikannya hook membuat penggantian itu otomatis, dan menjadikannya idempoten (memeriksa keadaan sebelum bertindak) membuatnya aman dijalankan berulang tanpa efek samping.
 
@@ -52,7 +52,7 @@ Database di-backup lewat plugin yang berjalan sebagai sidecar di Pod database, m
 
 ## Single Database Instance, No Replication
 
-Cluster database dijalankan dengan satu instance, bukan beberapa instance dengan replikasi otomatis.
+Cluster database dijalankan dengan satu instance.
 
 **Rationale.** Cluster Kubernetes yang dipakai berjalan di satu node fisik. Menjalankan beberapa instance database pada node yang sama menambah beban komputasi tanpa memberi redundansi nyata terhadap kegagalan node.
 
@@ -81,6 +81,22 @@ Selain rule alert bawaan dari stack monitoring, ada satu rule kustom dengan jend
 **Rationale.** Rule alert bawaan yang paling relevan untuk skenario ini punya jendela evaluasi dalam hitungan belasan menit, terlalu lama untuk dipakai sebagai pemeriksaan yang ingin tetap cepat dan bisa diulang sesering mungkin.
 
 **Tradeoff.** Rule ini murni untuk pembuktian, bukan sinyal operasional yang berarti bagi siapa pun yang memantau sistem sungguhan. Rule alert bawaan tetap aktif berdampingan dan tidak digantikan.
+
+## Single-Source Argo CD Application, No Separate GitOps Repository
+
+Chart aplikasi dan values yang di-bump CI berada di repo yang sama dengan source code, dibaca Argo CD lewat satu source tunggal. Tidak ada repo GitOps terpisah.
+
+**Rationale.** Desain awal memisahkan chart (repo aplikasi) dari values (repo GitOps terpisah), dihubungkan lewat mekanisme `ref` pada Application multi-source. Kombinasi itu terbukti tidak menerapkan kredensial repo privat dengan benar pada source ber-`ref`, bug yang sudah dilaporkan ke upstream Argo CD dan belum diperbaiki per pengecekan terakhir. Satu repo menghindari jalur kode yang cacat itu sepenuhnya, tanpa melonggarkan privasi repo mana pun.
+
+**Tradeoff.** Chart dan konfigurasi deployment-nya tidak lagi terpisah secara fisik antar repo; perubahan pada keduanya tercampur dalam riwayat commit yang sama. CI butuh izin tulis ke repo aplikasi sendiri untuk melakukan bump, bukan lagi ke repo terpisah.
+
+## Application Image Pulled via imagePullSecrets
+
+Node cluster menarik image aplikasi dari GHCR memakai kredensial (personal access token scope `read:packages`).
+
+**Rationale.** Image container mengikuti visibilitas repository sumbernya di GHCR; karena repo ini privat, image-nya ikut privat secara default. Mempublikasikan package registry secara terpisah dari repo akan melonggarkan kontrol privasi yang sudah sengaja dijaga.
+
+**Tradeoff.** Ada satu kredensial tambahan yang harus dibuat manual (GitHub tidak menyediakan cara otomatis membuat personal access token) dan disuntik ke cluster sebagai Secret, di luar mekanisme provisioning generate-otomatis yang dipakai Secret lain.
 
 ## Monitoring Namespace Runs Without Strict Pod Security Standards
 
