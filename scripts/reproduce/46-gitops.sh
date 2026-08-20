@@ -133,7 +133,7 @@ log "Verifikasi: selfHeal mengembalikan drift manual"
 declared_cpu="$(kc get deployment app -n "${APP_NAMESPACE}" \
   -o jsonpath='{.spec.template.spec.containers[0].resources.requests.cpu}')"
 kc patch deployment app -n "${APP_NAMESPACE}" --type=json \
-  -p '[{"op":"replace","path":"/spec/template/spec/containers/0/resources/requests/cpu","value":"999m"}]' \
+  -p '[{"op":"replace","path":"/spec/template/spec/containers/0/resources/requests/cpu","value":"300m"}]' \
   >/dev/null
 
 deadline=$(( SECONDS + WAIT_SHORT_SECS ))
