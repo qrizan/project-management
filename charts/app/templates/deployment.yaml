@@ -17,6 +17,12 @@ spec:
         {{- include "app.selectorLabels" . | nindent 8 }}
         {{- include "app.databaseClientLabel" . | nindent 8 }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range . }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
       securityContext:
         {{- include "app.podSecurityContext" . | nindent 8 }}
       containers:

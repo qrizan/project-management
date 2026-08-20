@@ -20,6 +20,15 @@ ARGOCD_REPO_KEY_PATH="${ARGOCD_REPO_KEY_PATH:-${HOME}/.ssh/pm-argocd-readonly}"
 [ -f "${ARGOCD_REPO_KEY_PATH}" ] \
   || fail "deploy key tidak ditemukan di ${ARGOCD_REPO_KEY_PATH} (lihat CD.md langkah 5 untuk cara membuatnya)"
 
+# GitHub tidak punya cara otomatis membuat personal access token, jadi ini
+# dibuat manual sekali di luar reproduce, sama seperti deploy key di atas.
+# Scope read:packages saja - image ghcr.io/qrizan/project-management ikut
+# privat mengikuti repo sumbernya, dan ini satu-satunya kredensial yang
+# dibutuhkan node cluster untuk pull-nya.
+GHCR_PULL_TOKEN_PATH="${GHCR_PULL_TOKEN_PATH:-${HOME}/.ghcr-pull-token}"
+[ -f "${GHCR_PULL_TOKEN_PATH}" ] \
+  || fail "token GHCR tidak ditemukan di ${GHCR_PULL_TOKEN_PATH} (lihat CD.md untuk cara membuatnya)"
+
 log "Namespace argocd"
 kc create namespace argocd --dry-run=client -o yaml | kc apply -f -
 
@@ -72,6 +81,14 @@ kc apply -f "${REPO_ROOT}/k8s/gitops/appproject-default.yaml"
 # dari desain multi-source sebelumnya yang butuh workaround "repo-creds"
 # karena kena bug argoproj/argo-cd#16747 pada mekanisme ref. Single-source
 # tidak lewat jalur itu, dibuktikan lewat uji isolasi manual (CD.md).
+log "Kredensial pull image GHCR"
+kc create secret docker-registry ghcr-pull-secret -n "${APP_NAMESPACE}" \
+  --docker-server=ghcr.io \
+  --docker-username=qrizan \
+  --docker-password="$(cat "${GHCR_PULL_TOKEN_PATH}")" \
+  --docker-email=ghcr-pull@users.noreply.github.com \
+  --dry-run=client -o yaml | kc apply -f -
+
 log "Kredensial baca repo project-management"
 kc create secret generic project-management-repo -n argocd \
   --from-literal=type=git \

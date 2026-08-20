@@ -5,6 +5,12 @@
 # build-scan-push di ci.yml setiap push ke main yang lolos gate Trivy dan
 # cosign sign, lewat commit langsung ke file ini (pesan commit memuat
 # [skip ci]). Bukan dieksekusi tangan di luar CI setelah bootstrap ini.
+# ghcr.io/qrizan/project-management privat, mengikuti visibilitas repo
+# sumbernya. Node cluster butuh kredensial buat pull, dibuat 46-gitops.sh
+# dari token yang dibuat manual (lihat CD.md).
+imagePullSecrets:
+  - ghcr-pull-secret
+
 image:
   repository: ghcr.io/qrizan/project-management
   tag: 2293fb3be4b12e183e197d911046d1cf14980986

@@ -2,6 +2,11 @@
 # memakai nama rilis.
 fullnameOverride: ""
 
+# Nama Secret dockerconfigjson untuk pull image dari registry privat. Kosong
+# berarti tidak ada imagePullSecrets yang dirender - image lokal (hasil kind
+# load) tidak pernah benar-benar di-pull, jadi tidak butuh autentikasi.
+imagePullSecrets: []
+
 image:
   repository: project-management-app
   tag: runner
