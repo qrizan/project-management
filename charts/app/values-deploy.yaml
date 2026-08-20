@@ -7,8 +7,8 @@
 # [skip ci]). Bukan dieksekusi tangan di luar CI setelah bootstrap ini.
 image:
   repository: ghcr.io/qrizan/project-management
-  tag: e18a3c2a591cfd82c27a64145b5a591ab6a7ce3e
-  digest: sha256:e394fdb888ff28317bb601bf312dc771ab4bfb2884dc2107d55ad2ba74eca43a
+  tag: 2293fb3be4b12e183e197d911046d1cf14980986
+  digest: sha256:56d693a65f3144b4095117f031dea024300ab1978bc2afbe4235b4ff283b3304
 
 # Data contoh dimuat, sama seperti values-local.yaml, supaya rilis yang
 # di-sync Argo CD punya data yang bisa dibandingkan dengan uji lain.
