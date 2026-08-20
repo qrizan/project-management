@@ -13,8 +13,8 @@ imagePullSecrets:
 
 image:
   repository: ghcr.io/qrizan/project-management
-  tag: 1643f0e057fd4320c538cc739e6610da316e661b
-  digest: sha256:705d35e125699134d30893b5a7cf4fdb9b371dfcd88eae69b1d008bc581cff29
+  tag: 8c118fe9b72fd7c9e4d88bced22635f7b7378f05
+  digest: sha256:f7f38a8772734f9588c0ef4e5bb8c24ce96cae43a97b6869b98a67a1f4d7889a
 
 # Data contoh dimuat, sama seperti values-local.yaml, supaya rilis yang
 # di-sync Argo CD punya data yang bisa dibandingkan dengan uji lain.
