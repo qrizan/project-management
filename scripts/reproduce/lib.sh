@@ -264,6 +264,10 @@ with_port_forward() {
   pkill -f "port-forward.*${local_port}:${remote_port}" 2>/dev/null || true
   kc port-forward "svc/${svc}" "${local_port}:${remote_port}" -n "${ns}" >/dev/null 2>&1 &
   local pf_pid=$!
+  # Trap, bukan cuma kill di akhir fungsi: kalau script pemanggil terhenti
+  # tidak normal (Ctrl+C, dibunuh) di tengah fungsi ini, proses port-forward
+  # tetap dibunuh alih-alih jadi proses yatim yang menahan port ini.
+  trap 'kill "${pf_pid}" 2>/dev/null || true' EXIT
   local ok=1 deadline=$(( SECONDS + 30 ))
   while [ "${SECONDS}" -lt "${deadline}" ]; do
     if curl -fsS -o /dev/null --max-time 2 "http://127.0.0.1:${local_port}/" 2>/dev/null; then
@@ -278,6 +282,7 @@ with_port_forward() {
   fi
   kill "${pf_pid}" 2>/dev/null || true
   wait "${pf_pid}" 2>/dev/null || true
+  trap - EXIT
   return "${ok}"
 }
 

@@ -31,5 +31,6 @@ fi
 "${HERE}/46-gitops.sh"
 "${HERE}/47-observability.sh"
 "${HERE}/48-alert-drill.sh"
+"${HERE}/49-connection-drill.sh"
 "${HERE}/50-verify.sh"
 "${HERE}/60-restore-drill.sh"

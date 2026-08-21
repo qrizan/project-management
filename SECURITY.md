@@ -33,7 +33,7 @@ Namespace yang menjalankan komponen observability adalah pengecualian. Komponen 
 
 ## Network Segmentation
 
-Tiap namespace ditutup total dengan aturan default-deny untuk lalu lintas masuk maupun keluar, lalu dibuka selektif hanya untuk jalur yang dibutuhkan: aplikasi ke database, operator database ke endpoint statusnya, database ke object storage backup, resolusi DNS.
+Tiap namespace ditutup total dengan aturan default-deny untuk lalu lintas masuk maupun keluar, lalu dibuka selektif hanya untuk jalur yang dibutuhkan: aplikasi ke database, operator database ke endpoint statusnya, database ke object storage backup, resolusi DNS, dan monitoring ke endpoint metrik database.
 
 Penegakan aturan ini diverifikasi lewat pengujian aktif, bukan diasumsikan dari keberadaan manifest. Ada uji yang menyatakan lolos hanya kalau sebuah koneksi yang seharusnya diblokir memang gagal terhubung.
 
@@ -62,5 +62,6 @@ Argo CD memakai AppProject `default` bawaan tanpa pembatasan: source repo, names
 | Cek role hilang di sebagian endpoint | Satu grup endpoint tidak memeriksa role administratif sebelum mengizinkan operasi tulis. Sama seperti di atas, dicatat eksplisit, belum diperbaiki. |
 | Database tanpa replikasi | Tidak ada failover otomatis kalau instance database gagal. Cadangan data tetap diambil kontinu dan diverifikasi bisa dipulihkan. |
 | Dependency belum sepenuhnya diaudit | Baseline audit dependency mencatat ratusan kerentanan di seluruh pohon dependency, termasuk transitif. Remediasi berjalan bertahap lewat gate pemindaian pada pipeline build, bukan sekaligus. |
+| Insiden `OOMKilled` tidak tertangkap alerting | Dibuktikan lewat query retroaktif terhadap insiden `OOMKilled` nyata pada sebuah Pod observability: tidak ada rule alert bawaan yang firing saat insiden terjadi. Belum ada rule custom yang mengisi celah ini. |
 
 Dua celah pertama di tabel di atas (password hash dan cek role) adalah temuan yang sengaja belum diperbaiki dan dicatat secara eksplisit, bukan diperbaiki diam-diam atau disembunyikan.

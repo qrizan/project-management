@@ -2,7 +2,7 @@
 
 Aplikasi manajemen proyek/tugas (Next.js App Router + Prisma + PostgreSQL), dengan tampilan Tailwind/Flowbite React, di-orkestrasi di atas Kubernetes lewat Helm, CI/CD, dan observability.
 
-Dokumen lain di repo ini: [ARCHITECTURE.md](ARCHITECTURE.md) untuk bentuk teknis sistem, [DECISION.md](DECISION.md) untuk keputusan desain dan alasannya, [SECURITY.md](SECURITY.md) untuk kontrol keamanan yang diterapkan, [DEVELOPMENT.md](DEVELOPMENT.md) untuk alur CI/CD dan GitOps.
+Dokumen lain di repo ini: [ARCHITECTURE.md](ARCHITECTURE.md) untuk bentuk teknis sistem, [DECISION.md](DECISION.md) untuk keputusan desain dan alasannya, [SECURITY.md](SECURITY.md) untuk kontrol keamanan yang diterapkan, [DEVELOPMENT.md](DEVELOPMENT.md) untuk alur CI/CD dan GitOps, [MONITORING.md](MONITORING.md) untuk observability (dashboard, alert, cara akses).
 
 ### Built with
 
@@ -50,6 +50,7 @@ Dokumen lain di repo ini: [ARCHITECTURE.md](ARCHITECTURE.md) untuk bentuk teknis
 │   ├── 46-gitops.sh
 │   ├── 47-observability.sh
 │   ├── 48-alert-drill.sh
+│   ├── 49-connection-drill.sh
 │   ├── 50-verify.sh
 │   └── 60-restore-drill.sh
 │
@@ -150,10 +151,11 @@ Manifest cluster dan platform ada di `k8s/`; database dan aplikasi dipasang seba
 ```
 scripts/reproduce/run-all.sh --clean
 ```
-atau
+atau, untuk menyimpan seluruh log ke `scripts/reproduce/output.txt` sekaligus tetap melihatnya berjalan di layar:
 ```
-scripts/reproduce/run-all.sh --clean 2>&1 | tee scripts/reproduce/output.txt
+scripts/reproduce/run-all.sh --clean 2>&1 | tee scripts/reproduce/output.txt; echo "exit: ${PIPESTATUS[0]}"
 ```
+`${PIPESTATUS[0]}` dipakai, bukan `$?`: lewat pipa (`|`), `$?` akan membaca kode keluar `tee`, bukan `run-all.sh`.
 
 Menghapus cluster kind sebelumnya (kalau ada), membangun cluster baru, memasang seluruh komponen platform (cert-manager, CloudNativePG, Envoy Gateway, metrics-server), object storage backup, database dan aplikasi, lalu observability (Prometheus/Grafana/Alertmanager). Ditutup dengan pemeriksaan otomatis: kesehatan Pod, penegakan NetworkPolicy, jalur HTTP lewat Gateway, alert yang bisa dipicu, dan uji restore backup.
 

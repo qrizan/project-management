@@ -105,3 +105,19 @@ Namespace yang menjalankan stack observability tidak menegakkan kebijakan keaman
 **Rationale.** Komponen yang mengumpulkan metrik level node butuh akses ke namespace jaringan host, namespace proses host, dan volume yang membaca filesystem host secara langsung. Kebutuhan ini dilarang eksplisit oleh kebijakan keamanan Pod bahkan pada level yang paling longgar sebelum "tanpa batasan sama sekali".
 
 **Tradeoff.** Namespace ini jadi satu-satunya tanpa penegakan keamanan Pod. Batasnya eksplisit: hanya komponen observability pihak ketiga yang boleh menempati namespace ini, workload lain tidak ditaruh di sini tanpa peninjauan ulang.
+
+## Optional PodMonitor Guarded by a Capabilities Check, Release Re-Upgraded After the CRD Exists
+
+Chart database mendeklarasikan resource `PodMonitor` di balik pengecekan kapabilitas Helm (`.Capabilities.APIVersions.Has`), dan rilisnya di-upgrade sekali lagi setelah stack monitoring terpasang.
+
+**Rationale.** Rilis database terpasang sebelum stack monitoring di pipeline, sehingga CRD yang dibutuhkan `PodMonitor` belum ada saat instalasi pertama. Tanpa penjagaan ini, instalasi gagal total. Penjagaan ini membuat rilis tetap terpasang bersih di kedua kondisi, dan upgrade susulan membuat `PodMonitor` terbentuk begitu CRD-nya tersedia.
+
+**Tradeoff.** Pengecekan kapabilitas ini cuma berlaku terhadap cluster hidup; render statis (`helm template`, `helm lint`) selalu menganggapnya tidak ada, sehingga resource ini divalidasi lewat instalasi nyata, bukan lewat pemeriksaan statis chart.
+
+## Vendored CNPG Dashboard, Trimmed to Match What This Topology Actually Populates
+
+Dashboard Grafana resmi CloudNativePG di-commit ke repo dengan 32 dari 114 panel upstream dibuang (114 mencakup panel yang bersarang di dalam row yang collapsed, tidak cuma panel level-atas).
+
+**Rationale.** Panel yang dibuang bergantung pada metrik yang struktural tidak pernah terisi di topologi ini, dalam tiga kelompok: panel storage butuh fitur CSI yang tidak diimplementasikan StorageClass default; panel operator (reconcile error, jumlah Pod operator) butuh metrik `controller_runtime_*` yang di luar cakupan `PodMonitor`, yang cuma menyeleksi Pod database; dan panel replication lag per-koneksi (write/flush/replay lag, satu row penuh) butuh baris `pg_stat_replication` di sisi primary yang cuma terisi kalau ada standby yang benar-benar terhubung, sesuatu yang tidak pernah terjadi pada cluster satu instance ini. Metrik replication level-instance yang dihitung instance manager sendiri dan tetap ada nilainya walau tidak ada standby (`cnpg_pg_replication_lag`, `streaming_replicas`, `is_wal_receiver_up`, `in_recovery`) dipertahankan lewat panel lain. Tiap penghapusan dikonfirmasi lewat query Prometheus langsung sebelum panelnya dibuang.
+
+**Tradeoff.** Dashboard ini tidak lagi salinan murni upstream dan perlu disinkronkan manual kalau proyek sumbernya mengubah dashboard-nya.

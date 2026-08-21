@@ -1,0 +1,32 @@
+{{- if and .Values.monitoring.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/PodMonitor") }}
+# Cluster.spec.monitoring.enablePodMonitor sudah deprecated di CNPG (dikonfirmasi
+# ke CRD v1.30.0 yang terpasang, bukan cuma dokumentasi). Jalur yang berlaku
+# adalah PodMonitor manual, exporter-nya sendiri sudah berjalan bawaan di proses
+# instance manager tiap Pod PostgreSQL, tidak butuh container tambahan.
+#
+# Label release wajib ada: Prometheus dari rilis kube-prometheus-stack di
+# namespace lain cuma mengambil PodMonitor berlabel release=<nama rilis itu>
+# (perilaku default chart saat podMonitorSelectorNilUsesHelmValues aktif,
+# dikonfirmasi ke template resmi chart). Pola sama seperti PrometheusRule
+# app-restart-demo di k8s/observability/alert-rule.yaml.
+#
+# Capabilities.APIVersions.Has menjaga rilis "database" tetap terpasang di
+# cluster yang belum punya CRD monitoring.coreos.com (rilis ini dipasang lebih
+# dulu dari kube-prometheus-stack, lihat urutan di run-all.sh). Tanpa penjaga
+# ini, helm upgrade --install gagal total di admission: "no matches for kind
+# PodMonitor". PodMonitor baru benar-benar dibuat setelah 47-observability.sh
+# meng-upgrade ulang rilis ini, ketika CRD-nya sudah ada.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ .Values.cluster.name }}-podmonitor
+  labels:
+    {{- include "database.labels" . | nindent 4 }}
+    release: {{ .Values.monitoring.prometheusRelease }}
+spec:
+  selector:
+    matchLabels:
+      cnpg.io/cluster: {{ .Values.cluster.name }}
+  podMetricsEndpoints:
+  - port: metrics
+{{- end }}

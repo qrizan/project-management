@@ -10,6 +10,7 @@ need openssl
 need docker
 need kind
 require_cluster
+read_api_server_endpoint
 
 log "Namespace ${MONITORING_NAMESPACE} (privileged, node-exporter butuh hostPath/hostNetwork/hostPID)"
 kc apply -f "${REPO_ROOT}/k8s/observability/namespace.yaml"
@@ -105,6 +106,60 @@ while true; do
   printf '  ... belum Ready (%s/6 Pod ada): %s\n' "${total}" "${not_ready:-menunggu Pod muncul}"
   sleep 15
 done
+
+# Rilis "database" dipasang 40-app.sh, sebelum CRD monitoring.coreos.com ada
+# di cluster ini. Template PodMonitor-nya menjaga diri sendiri lewat
+# Capabilities.APIVersions.Has (lihat charts/database/templates/podmonitor.yaml),
+# jadi rilis awal itu terpasang tanpa PodMonitor, bukan gagal. Di-upgrade ulang
+# di sini, sekarang CRD-nya sudah ada (baru dipasang beberapa baris di atas),
+# supaya PodMonitor menyusul terbentuk tanpa mengubah resource lain rilis ini.
+log "Menyinkronkan ulang rilis database (PodMonitor, CRD-nya baru sekarang ada)"
+helm_release database database "${DATABASE_VALUES_ARGS[@]}"
+
+# Dashboard resmi proyek CNPG untuk metrik Cluster, diunduh sekali dari
+# cloudnative-pg/grafana-dashboards lalu disunting: 32 panel dibuang (dari 114
+# termasuk panel bersarang di row yang collapsed, jadi 82), seluruhnya karena
+# bergantung pada metrik yang tidak akan pernah terisi di lingkungan ini,
+# bukan sekadar kosong sementara. Tiga kelompok penyebab:
+#   - kubelet_volume_stats_* (Storage & I/O, Volume Space Usage): PVC lewat
+#     local-path-provisioner (StorageClass default kind) tidak mengimplementasikan
+#     CSI NodeGetVolumeStats, jadi kubelet tidak pernah melaporkan statistik
+#     per-PV, terlepas dari scraping.
+#   - metrik operator (Operator row, panel Reconcile errors, panel Operator
+#     Status, plus variabel dashboard operatorNamespace yang query-nya sendiri
+#     butuh metrik operator): PodMonitor di sini sengaja cuma mencakup Pod
+#     database (cnpg.io/cluster), bukan Pod operator cnpg-controller-manager,
+#     jadi seluruh metrik controller_runtime_* dan turunannya (termasuk
+#     variabel yang query-nya bergantung padanya) selalu kosong.
+#   - replication lag per-koneksi (Replication row: Write/Flush/Replay Lag):
+#     metriknya bersumber dari pg_stat_replication di sisi primary, yang
+#     barisnya cuma ada kalau ada standby yang benar-benar terhubung. Cluster
+#     ini satu instance, jadi tabel itu selalu kosong.
+# Panel yang memakai metrik replication per-instance biasa (cnpg_pg_replication_lag,
+# streaming_replicas, is_wal_receiver_up, in_recovery) DIPERTAHANKAN - metrik
+# itu dihitung instance manager sendiri dan tetap terisi (bernilai 0) walau
+# cluster cuma satu instance atau tidak ada standby terhubung, beda dari
+# kubelet_volume_stats/controller_runtime_*/pg_stat_replication yang benar-benar
+# tidak pernah ada.
+# Disimpan sebagai file di repo, bukan diunduh fresh tiap provisioning seperti
+# rencana semula - begitu isinya disunting, ini bukan lagi salinan upstream
+# murni yang aman diganti otomatis.
+#
+# Sidecar grafana-sc-dashboard memantau ConfigMap berlabel grafana_dashboard=1
+# di seluruh namespace (NAMESPACE: ALL pada konfigurasi chart), jadi
+# penempatan di namespace monitoring bukan keharusan teknis, dipilih supaya
+# berdekatan dengan Grafana yang memakainya.
+#
+# --server-side, bukan client-side (default): dashboard JSON-nya sendiri
+# melebihi batas 262144 byte anotasi kubectl.kubernetes.io/last-applied-configuration
+# yang dipakai client-side apply. Pola sama dengan CRD applicationsets.argoproj.io
+# di 46-gitops.sh dan CRD CloudNativePG di 20-platform.sh.
+log "Dashboard Grafana CNPG"
+kc create configmap cnpg-grafana-dashboard -n "${MONITORING_NAMESPACE}" \
+  --from-file=cnpg-cluster.json="${REPO_ROOT}/k8s/observability/cnpg-grafana-dashboard.json" \
+  --dry-run=client -o yaml \
+  | kc label --local -f - grafana_dashboard=1 -o yaml \
+  | kc apply --server-side -f -
 
 log "Monitoring terpasang"
 helm --kube-context "${KUBE_CONTEXT}" list -n "${MONITORING_NAMESPACE}"

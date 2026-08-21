@@ -122,3 +122,18 @@ networkPolicy:
     objectStorage:
       namespace: garage
       port: 3900
+
+  # Mengizinkan Prometheus (namespace monitoring) men-scrape exporter metrik
+  # CNPG lewat PodMonitor di bawah.
+  metrics:
+    enabled: true
+    name: cnpg-allow-metrics
+    monitoringNamespace: monitoring
+    port: 9187
+
+monitoring:
+  enabled: true
+  # Nama rilis Helm kube-prometheus-stack (k8s/observability), dipakai sebagai
+  # label "release" supaya PodMonitor ini terpilih Prometheus. Lihat komentar
+  # di templates/podmonitor.yaml.
+  prometheusRelease: kube-prometheus-stack

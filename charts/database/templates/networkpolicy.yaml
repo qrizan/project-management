@@ -81,3 +81,35 @@ spec:
     - protocol: TCP
       port: {{ $eg.objectStorage.port }}
 {{- end }}
+{{- if .Values.networkPolicy.metrics.enabled }}
+{{- $m := .Values.networkPolicy.metrics }}
+---
+# Prometheus (namespace terpisah) men-scrape exporter metrik CNPG langsung ke
+# Pod lewat PodMonitor, bukan lewat Service. Tanpa aturan ini default-deny-ingress
+# di k8s/app/namespace.yaml memblokirnya walau PodMonitor sendiri sudah benar,
+# dan gagalnya diam-diam (target berstatus down, bukan error yang jelas).
+#
+# Diseleksi lewat keberadaan kunci label, pola sama seperti operatorStatus di
+# atas, supaya berlaku juga untuk cluster uji pemulihan.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $m.name }}
+  labels:
+    {{- include "database.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+    - key: cnpg.io/cluster
+      operator: Exists
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ $m.monitoringNamespace }}
+    ports:
+    - protocol: TCP
+      port: {{ $m.port }}
+{{- end }}

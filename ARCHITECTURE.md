@@ -47,7 +47,7 @@ Seluruh workload aplikasi memakai `securityContext` profil restricted dengan `re
 
 Database dan aplikasi dipasang sebagai dua rilis Helm terpisah, bukan satu:
 
-- `charts/database`: `ObjectStore`, `Cluster` (anotasi `helm.sh/resource-policy: keep`), `ScheduledBackup`, `NetworkPolicy` sisi database.
+- `charts/database`: `ObjectStore`, `Cluster` (anotasi `helm.sh/resource-policy: keep`), `ScheduledBackup`, `PodMonitor` (dijaga lewat pengecekan kapabilitas Helm, lihat [DECISION.md](DECISION.md)), `NetworkPolicy` sisi database.
 - `charts/app`: `Deployment`, `Service`, `Gateway`, `HTTPRoute`, `HorizontalPodAutoscaler`, `NetworkPolicy` aplikasi. Migrasi Prisma berjalan sebagai hook `pre-install`/`pre-upgrade`, seed data sebagai hook `post-install`/`post-upgrade`.
 
 Pemisahan ini membuat `helm uninstall` pada rilis aplikasi tidak menyentuh database maupun PersistentVolumeClaim-nya.
@@ -87,11 +87,15 @@ flowchart TB
     subgraph gar[garage]
         garage["Garage Pods"]
     end
+    subgraph mon[monitoring]
+        prom["Prometheus"]
+    end
 
     envoy -->|"port 3000"| app
     app -->|"port 5432\nlabel: postgres-client"| pgdb
     operator -->|"port 8000\nstatus endpoint"| pgdb
     pgdb -->|"port 3900\nS3"| garage
+    prom -->|"port 9187\nmetrics"| pgdb
 ```
 
 Tiap namespace ditutup dengan `NetworkPolicy` default-deny (ingress dan egress), lalu dibuka selektif seperti digambarkan di atas, plus DNS ke CoreDNS untuk seluruh Pod.
@@ -120,12 +124,17 @@ Rilis aplikasi disinkronkan ke cluster lewat Argo CD (GitOps), bukan `helm upgra
 
 ## Observability
 
-Prometheus men-scrape metrik level container (CPU, memory) lewat cAdvisor dan metrik status Pod (restart count) lewat kube-state-metrics, mencakup namespace aplikasi maupun database. Grafana menyediakan dashboard bawaan untuk resource compute per namespace/Pod. Alertmanager menerima alert dari rule yang dievaluasi Prometheus, termasuk rule bawaan `kube-prometheus-stack` dan satu rule tambahan yang spesifik ke proyek ini.
+```mermaid
+flowchart LR
+    sources["node-exporter, cAdvisor,\nkube-state-metrics, exporter CloudNativePG"] --> prom[("Prometheus")]
+    prom --> grafana["Grafana\ndashboard"]
+    prom --> alertmgr["Alertmanager\nalert"]
+```
 
-Prometheus, Grafana, dan Alertmanager tidak diekspos lewat Gateway, diakses lewat port-forward.
+`kube-prometheus-stack` (Prometheus, Grafana, Alertmanager) mengumpulkan metrik node, container, dan database. Detail lengkap ada di [MONITORING.md](MONITORING.md).
 
 ## Reproducibility
 
-Seluruh orkestrasi di atas bisa dibangun ulang dari cluster kosong lewat sekumpulan script berurutan (lihat struktur folder di [README.md](README.md)): pembuatan cluster, instalasi komponen platform, instalasi object storage, instalasi database dan aplikasi, instalasi observability, lalu serangkaian pemeriksaan otomatis (kesehatan Pod, penegakan Pod Security, jalur HTTP lewat Gateway, isi data, penegakan NetworkPolicy lewat uji positif dan negatif, keberhasilan WAL archiving dan backup, scrape target Prometheus, ketersediaan dashboard Grafana, alert yang bisa dipicu) dan uji restore backup penuh (membuat database baru dari backup, membandingkan isinya dengan sumber).
+Seluruh orkestrasi di atas bisa dibangun ulang dari cluster kosong lewat sekumpulan script berurutan (lihat struktur folder di [README.md](README.md)): pembuatan cluster, instalasi komponen platform, instalasi object storage, instalasi database dan aplikasi, instalasi observability, lalu serangkaian pemeriksaan otomatis (kesehatan Pod, penegakan Pod Security, jalur HTTP lewat Gateway, isi data, penegakan NetworkPolicy lewat uji positif dan negatif, keberhasilan WAL archiving dan backup, scrape target Prometheus, ketersediaan dashboard Grafana, alert yang bisa dipicu, lonjakan koneksi database yang terbukti lewat metrik nyata) dan uji restore backup penuh (membuat database baru dari backup, membandingkan isinya dengan sumber).
 
 Image PostgreSQL dan image aplikasi ditarik/dibangun di host lalu dimuat langsung ke node cluster, bukan dibiarkan ditarik oleh kubelet saat runtime.

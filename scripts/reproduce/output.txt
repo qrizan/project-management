@@ -1,0 +1,1092 @@
+
+=== Menghapus cluster kind 'project-management'
+Deleting cluster "project-management" ...
+Deleted nodes: ["project-management-control-plane"]
+
+=== Menghapus container cloud-provider-kind
+terhapus
+
+=== Menghapus container LoadBalancer sisa (kindccm-*)
+tidak ada, dilewati
+
+=== Teardown selesai
+
+=== Membuat cluster kind 'project-management'
+Creating cluster "project-management" ...
+ • Ensuring node image (kindest/node:v1.36.1) 🖼  ...
+ ✓ Ensuring node image (kindest/node:v1.36.1) 🖼
+ • Preparing nodes 📦   ...
+ ✓ Preparing nodes 📦 
+ • Writing configuration 📜  ...
+ ✓ Writing configuration 📜
+ • Starting control-plane 🕹️  ...
+ ✓ Starting control-plane 🕹️
+ • Installing CNI 🔌  ...
+ ✓ Installing CNI 🔌
+ • Installing StorageClass 💾  ...
+ ✓ Installing StorageClass 💾
+Set kubectl context to "kind-project-management"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-project-management
+
+Thanks for using kind! 😊
+
+=== Menunggu node siap
+node/project-management-control-plane condition met
+NAME                               STATUS   ROLES           AGE   VERSION
+project-management-control-plane   Ready    control-plane   23s   v1.36.1
+
+=== Cluster siap
+
+=== cert-manager v1.21.1 (prasyarat Barman Cloud Plugin)
+namespace/cert-manager created
+customresourcedefinition.apiextensions.k8s.io/challenges.acme.cert-manager.io created
+customresourcedefinition.apiextensions.k8s.io/orders.acme.cert-manager.io created
+customresourcedefinition.apiextensions.k8s.io/certificaterequests.cert-manager.io created
+customresourcedefinition.apiextensions.k8s.io/certificates.cert-manager.io created
+customresourcedefinition.apiextensions.k8s.io/clusterissuers.cert-manager.io created
+customresourcedefinition.apiextensions.k8s.io/issuers.cert-manager.io created
+serviceaccount/cert-manager-cainjector created
+serviceaccount/cert-manager created
+serviceaccount/cert-manager-webhook created
+clusterrole.rbac.authorization.k8s.io/cert-manager-cainjector created
+clusterrole.rbac.authorization.k8s.io/cert-manager-controller-issuers created
+clusterrole.rbac.authorization.k8s.io/cert-manager-controller-clusterissuers created
+clusterrole.rbac.authorization.k8s.io/cert-manager-controller-certificates created
+clusterrole.rbac.authorization.k8s.io/cert-manager-controller-orders created
+clusterrole.rbac.authorization.k8s.io/cert-manager-controller-challenges created
+clusterrole.rbac.authorization.k8s.io/cert-manager-controller-ingress-shim created
+clusterrole.rbac.authorization.k8s.io/cert-manager-cluster-view created
+clusterrole.rbac.authorization.k8s.io/cert-manager-view created
+clusterrole.rbac.authorization.k8s.io/cert-manager-edit created
+clusterrole.rbac.authorization.k8s.io/cert-manager-controller-approve:cert-manager-io created
+clusterrole.rbac.authorization.k8s.io/cert-manager-controller-certificatesigningrequests created
+clusterrole.rbac.authorization.k8s.io/cert-manager-webhook:subjectaccessreviews created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-cainjector created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-issuers created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-clusterissuers created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-certificates created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-orders created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-challenges created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-ingress-shim created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-approve:cert-manager-io created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-certificatesigningrequests created
+clusterrolebinding.rbac.authorization.k8s.io/cert-manager-webhook:subjectaccessreviews created
+role.rbac.authorization.k8s.io/cert-manager-cainjector:leaderelection created
+role.rbac.authorization.k8s.io/cert-manager:leaderelection created
+role.rbac.authorization.k8s.io/cert-manager-webhook:dynamic-serving created
+rolebinding.rbac.authorization.k8s.io/cert-manager-cainjector:leaderelection created
+rolebinding.rbac.authorization.k8s.io/cert-manager:leaderelection created
+rolebinding.rbac.authorization.k8s.io/cert-manager-webhook:dynamic-serving created
+service/cert-manager-cainjector created
+service/cert-manager created
+service/cert-manager-webhook created
+deployment.apps/cert-manager-cainjector created
+deployment.apps/cert-manager created
+deployment.apps/cert-manager-webhook created
+mutatingwebhookconfiguration.admissionregistration.k8s.io/cert-manager-webhook created
+validatingwebhookconfiguration.admissionregistration.k8s.io/cert-manager-webhook created
+deployment.apps/cert-manager condition met
+deployment.apps/cert-manager-cainjector condition met
+deployment.apps/cert-manager-webhook condition met
+
+=== cloud-provider-kind v0.11.1
+ff0d5a86d4af58a69eeb82b37438169866453fb50a960071271c6052fe1a9099
+
+=== CloudNativePG 1.30.0
+namespace/cnpg-system serverside-applied
+customresourcedefinition.apiextensions.k8s.io/backups.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/clusterimagecatalogs.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/clusters.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/databaseroles.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/databases.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/failoverquorums.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/imagecatalogs.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/poolers.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/publications.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/scheduledbackups.postgresql.cnpg.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/subscriptions.postgresql.cnpg.io serverside-applied
+serviceaccount/cnpg-manager serverside-applied
+clusterrole.rbac.authorization.k8s.io/cnpg-database-editor-role serverside-applied
+clusterrole.rbac.authorization.k8s.io/cnpg-database-viewer-role serverside-applied
+clusterrole.rbac.authorization.k8s.io/cnpg-manager serverside-applied
+clusterrole.rbac.authorization.k8s.io/cnpg-publication-editor-role serverside-applied
+clusterrole.rbac.authorization.k8s.io/cnpg-publication-viewer-role serverside-applied
+clusterrole.rbac.authorization.k8s.io/cnpg-subscription-editor-role serverside-applied
+clusterrole.rbac.authorization.k8s.io/cnpg-subscription-viewer-role serverside-applied
+clusterrolebinding.rbac.authorization.k8s.io/cnpg-manager-rolebinding serverside-applied
+configmap/cnpg-default-monitoring serverside-applied
+service/cnpg-webhook-service serverside-applied
+deployment.apps/cnpg-controller-manager serverside-applied
+mutatingwebhookconfiguration.admissionregistration.k8s.io/cnpg-mutating-webhook-configuration serverside-applied
+validatingwebhookconfiguration.admissionregistration.k8s.io/cnpg-validating-webhook-configuration serverside-applied
+Waiting for deployment "cnpg-controller-manager" rollout to finish: 0 of 1 updated replicas are available...
+deployment "cnpg-controller-manager" successfully rolled out
+
+=== Barman Cloud Plugin v0.14.0
+customresourcedefinition.apiextensions.k8s.io/objectstores.barmancloud.cnpg.io created
+serviceaccount/plugin-barman-cloud created
+role.rbac.authorization.k8s.io/barman-plugin-leader-election-role created
+clusterrole.rbac.authorization.k8s.io/barman-plugin-metrics-auth-role created
+clusterrole.rbac.authorization.k8s.io/barman-plugin-metrics-reader created
+clusterrole.rbac.authorization.k8s.io/barman-plugin-objectstore-editor-role created
+clusterrole.rbac.authorization.k8s.io/barman-plugin-objectstore-viewer-role created
+clusterrole.rbac.authorization.k8s.io/plugin-barman-cloud created
+rolebinding.rbac.authorization.k8s.io/barman-plugin-leader-election-rolebinding created
+clusterrolebinding.rbac.authorization.k8s.io/barman-plugin-metrics-auth-rolebinding created
+clusterrolebinding.rbac.authorization.k8s.io/plugin-barman-cloud-binding created
+secret/plugin-barman-cloud-f998mh5292 created
+service/barman-cloud created
+deployment.apps/barman-cloud created
+certificate.cert-manager.io/barman-cloud-client created
+certificate.cert-manager.io/barman-cloud-server created
+issuer.cert-manager.io/selfsigned-issuer created
+Waiting for deployment "barman-cloud" rollout to finish: 0 of 1 updated replicas are available...
+deployment "barman-cloud" successfully rolled out
+
+=== Envoy Gateway v1.8.3
+Release "eg" does not exist. Installing it now.
+Pulled: docker.io/envoyproxy/gateway-helm:v1.8.3
+Digest: sha256:cfb34ff4266c87a394cd6be5c13607a2dd47083aef771368302eaeaa99c4a0a9
+NAME: eg
+LAST DEPLOYED: Fri Aug 21 13:55:10 2026
+NAMESPACE: envoy-gateway-system
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+NOTES:
+**************************************************************************
+*** PLEASE BE PATIENT: Envoy Gateway may take a few minutes to install ***
+**************************************************************************
+
+Envoy Gateway is an open source project for managing Envoy Proxy as a standalone or Kubernetes-based application gateway.
+
+Thank you for installing Envoy Gateway! 🎉
+
+Your release is named: eg. 🎉
+
+Your release is in namespace: envoy-gateway-system. 🎉
+
+To learn more about the release, try:
+
+  $ helm status eg -n envoy-gateway-system
+  $ helm get all eg -n envoy-gateway-system
+
+To have a quickstart of Envoy Gateway, please refer to https://gateway.envoyproxy.io/latest/tasks/quickstart.
+
+To get more details, please visit https://gateway.envoyproxy.io and https://github.com/envoyproxy/gateway.
+deployment.apps/envoy-gateway condition met
+gatewayclass.gateway.networking.k8s.io/eg created
+gatewayclass.gateway.networking.k8s.io/eg condition met
+
+=== metrics-server
+serviceaccount/metrics-server created
+clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
+clusterrole.rbac.authorization.k8s.io/system:metrics-server created
+rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
+clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
+clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
+service/metrics-server created
+deployment.apps/metrics-server created
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
+Waiting for deployment "metrics-server" rollout to finish: 0 of 1 updated replicas are available...
+deployment "metrics-server" successfully rolled out
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io condition met
+
+=== Platform siap
+
+=== Namespace dan NetworkPolicy Garage
+namespace/garage created
+networkpolicy.networking.k8s.io/default-deny-ingress created
+networkpolicy.networking.k8s.io/garage-allow-postgres created
+
+=== Membuat Secret garage-bootstrap
+secret/garage-bootstrap created
+
+=== Menerapkan manifest Garage
+configmap/garage-config created
+service/garage-rpc created
+service/garage created
+statefulset.apps/garage created
+
+=== Menunggu Garage siap
+Waiting for 1 pods to be ready...
+partitioned roll out complete: 1 new pods have been updated...
+
+=== Garage siap
+
+=== Namespace dan aturan tolak-bawaan
+namespace/project-management created
+networkpolicy.networking.k8s.io/default-deny-ingress created
+networkpolicy.networking.k8s.io/default-deny-egress created
+networkpolicy.networking.k8s.io/allow-dns created
+networkpolicy.networking.k8s.io/allow-egress-database created
+
+=== Membuat Secret app-secrets
+secret/app-secrets created
+
+=== Menyalin kredensial S3 Garage ke namespace aplikasi
+secret/garage-s3-credentials created
+
+=== Membaca alamat API server untuk aturan egress
+  172.18.0.2:6443
+
+=== Menyiapkan image PostgreSQL
+18.4-system-trixie: Pulling from cloudnative-pg/postgresql
+Digest: sha256:42708a75345b7a48fdd9257b071830783a97fd228529196b6313187a7198e185
+Status: Image is up to date for ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
+ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
+Image: "ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie" with ID "sha256:c90b4f58107ada70a298f009b4f5c723525ce5ea41ce55ca092c113a23eced1e" not yet present on node "project-management-control-plane", loading...
+
+=== Rilis database
+Release "database" does not exist. Installing it now.
+NAME: database
+LAST DEPLOYED: Fri Aug 21 14:06:13 2026
+NAMESPACE: project-management
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+  ... postgres: menunggu status
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+  ... postgres: Waiting for the instances to become active
+
+=== Membangun image aplikasi
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 851B done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 2.3s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+#3 CACHED
+
+#4 [internal] load metadata for docker.io/oven/bun:1.3.14-debian
+#4 DONE 1.6s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 191B done
+#5 DONE 0.0s
+
+#6 [deps 1/4] FROM docker.io/oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 330.28kB 0.0s done
+#7 DONE 0.0s
+
+#8 [deps 4/4] RUN --mount=type=cache,target=/root/.bun/install/cache     bun install --frozen-lockfile --network-concurrency 8
+#8 CACHED
+
+#9 [deps 3/4] COPY package.json bun.lock ./
+#9 CACHED
+
+#10 [deps 2/4] WORKDIR /app
+#10 CACHED
+
+#11 [builder 1/4] WORKDIR /app
+#11 CACHED
+
+#12 [builder 2/4] COPY . .
+#12 DONE 0.0s
+
+#13 [builder 3/4] RUN bunx prisma generate
+#13 1.119 Prisma schema loaded from prisma/schema.prisma
+#13 1.512 
+#13 1.512 ✔ Generated Prisma Client (v5.14.0) to ./node_modules/@prisma/client in 43ms
+#13 1.512 
+#13 1.512 Start using Prisma Client in Node.js (See: https://pris.ly/d/client)
+#13 1.512 ```
+#13 1.512 import { PrismaClient } from '@prisma/client'
+#13 1.512 const prisma = new PrismaClient()
+#13 1.512 ```
+#13 1.512 or start using Prisma Client at the edge (See: https://pris.ly/d/accelerate)
+#13 1.512 ```
+#13 1.512 import { PrismaClient } from '@prisma/client/edge'
+#13 1.512 const prisma = new PrismaClient()
+#13 1.512 ```
+#13 1.512 
+#13 1.512 See other ways of importing Prisma Client: http://pris.ly/d/importing-client
+#13 1.512 
+#13 1.512 ┌─────────────────────────────────────────────────────────────┐
+#13 1.512 │  Deploying your app to serverless or edge functions?        │
+#13 1.512 │  Try Prisma Accelerate for connection pooling and caching.  │
+#13 1.512 │  https://pris.ly/cli/--accelerate                           │
+#13 1.512 └─────────────────────────────────────────────────────────────┘
+#13 1.512 
+#13 DONE 1.8s
+
+#14 [builder 4/4] RUN bun run build
+#14 0.195 $ next build
+#14 1.094 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#14 1.094 This information is used to shape Next.js' roadmap and prioritize features.
+#14 1.094 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#14 1.094 https://nextjs.org/telemetry
+#14 1.094 
+#14 1.164   ▲ Next.js 14.2.35
+#14 1.164 
+#14 1.189    Creating an optimized production build ...
+#14 27.81 <w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'node-fetch'
+#14 27.83 <w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../../node-fetch' in /app/node_modules/next/dist/compiled/@next/font/dist/google for build dependencies doesn't lead to expected result 'node-fetch', but to 'Error: Can't resolve '../../../../../../../../node-fetch' in '/app/node_modules/next/dist/compiled/@next/font/dist/google'' instead. Resolving dependencies are ignored for this path.
+#14 27.83 <w>  at resolve commonjs file ../../../../../../../../node-fetch (expected node-fetch)
+#14 27.83 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/dist/google/fetch-font-file.js
+#14 27.83 <w>  at file /app/node_modules/next/dist/compiled/@next/font/dist/google/fetch-font-file.js
+#14 27.83 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/dist/google/loader.js
+#14 27.83 <w>  at file /app/node_modules/next/dist/compiled/@next/font/dist/google/loader.js
+#14 27.83 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/google/loader.js
+#14 27.83 <w>  at file /app/node_modules/next/dist/compiled/@next/font/google/loader.js
+#14 27.83 <w>  at file dependencies /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#14 27.83 <w>  at file /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#14 27.83 <w>  at resolve commonjs /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#14 34.59 Browserslist: caniuse-lite is outdated. Please run:
+#14 34.59   npx update-browserslist-db@latest
+#14 34.59   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+#14 45.03 Browserslist: caniuse-lite is outdated. Please run:
+#14 45.03   npx update-browserslist-db@latest
+#14 45.03   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+#14 46.21 <w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'node-fetch'
+#14 46.34  ✓ Compiled successfully
+#14 46.37    Linting and checking validity of types ...
+#14 59.24    Collecting page data ...
+#14 61.66    Generating static pages (0/12) ...
+#14 78.38    Generating static pages (3/12) 
+#14 78.38    Generating static pages (6/12) 
+#14 78.39    Generating static pages (9/12) 
+#14 80.13  ✓ Generating static pages (12/12)
+#14 80.84    Finalizing page optimization ...
+#14 80.84    Collecting build traces ...
+#14 80.98 
+#14 80.99 Route (app)                              Size     First Load JS
+#14 80.99 ┌ ƒ /                                    97.6 kB         256 kB
+#14 80.99 ├ ƒ /_not-found                          880 B          88.7 kB
+#14 80.99 ├ ƒ /api/auth/[...nextauth]              0 B                0 B
+#14 80.99 ├ ƒ /api/projects                        0 B                0 B
+#14 80.99 ├ ƒ /api/projects/[id]                   0 B                0 B
+#14 80.99 ├ ƒ /api/users                           0 B                0 B
+#14 80.99 ├ ƒ /api/users/[id]                      0 B                0 B
+#14 80.99 ├ ƒ /auth/signin                         734 B           161 kB
+#14 80.99 ├ ƒ /auth/signout                        376 B           161 kB
+#14 80.99 ├ ƒ /projects                            2.03 kB         161 kB
+#14 80.99 ├ ƒ /projects/[id]                       1.26 kB         180 kB
+#14 80.99 ├ ƒ /projects/edit/[id]                  1.55 kB         302 kB
+#14 80.99 ├ ƒ /projects/new                        1.98 kB         303 kB
+#14 80.99 ├ ƒ /users                               856 B           160 kB
+#14 80.99 ├ ƒ /users/[id]                          1.35 kB         194 kB
+#14 80.99 └ ƒ /users/new                           1.35 kB         194 kB
+#14 80.99 + First Load JS shared by all            87.9 kB
+#14 80.99   ├ chunks/117-e027c137a7e4d283.js       32 kB
+#14 80.99   ├ chunks/fd9d1056-1b5521dfb8c8d0ac.js  53.8 kB
+#14 80.99   └ other shared chunks (total)          2.01 kB
+#14 80.99 
+#14 80.99 
+#14 80.99 ƒ  (Dynamic)  server-rendered on demand
+#14 80.99 
+#14 DONE 81.4s
+
+#15 exporting to image
+#15 exporting layers
+#15 exporting layers 0.6s done
+#15 writing image sha256:423e9e3e02cef32451e85c1ca0691c826157623287cbb6d0cd8ead5297597845 done
+#15 naming to docker.io/library/project-management-app:builder done
+#15 DONE 0.7s
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 851B done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 1.0s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+#3 CACHED
+
+#4 [internal] load metadata for docker.io/oven/bun:1.3.14-debian
+#4 DONE 1.3s
+
+#5 [internal] load metadata for docker.io/library/node:24-slim
+#5 DONE 4.5s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 191B done
+#6 DONE 0.0s
+
+#7 [deps 1/4] FROM docker.io/oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
+#7 DONE 0.0s
+
+#8 [runner 1/7] FROM docker.io/library/node:24-slim@sha256:3638d9a6fe4030bd716be989438248074489337ba3275657f93595428be4fc03
+#8 DONE 0.0s
+
+#9 [internal] load build context
+#9 transferring context: 30.18kB done
+#9 DONE 0.0s
+
+#10 [deps 4/4] RUN --mount=type=cache,target=/root/.bun/install/cache     bun install --frozen-lockfile --network-concurrency 8
+#10 CACHED
+
+#11 [deps 2/4] WORKDIR /app
+#11 CACHED
+
+#12 [deps 3/4] COPY package.json bun.lock ./
+#12 CACHED
+
+#13 [builder 1/4] WORKDIR /app
+#13 CACHED
+
+#14 [builder 2/4] COPY . .
+#14 DONE 0.1s
+
+#15 [builder 3/4] RUN bunx prisma generate
+#15 0.848 Prisma schema loaded from prisma/schema.prisma
+#15 1.406 
+#15 1.406 ✔ Generated Prisma Client (v5.14.0) to ./node_modules/@prisma/client in 66ms
+#15 1.406 
+#15 1.406 Start using Prisma Client in Node.js (See: https://pris.ly/d/client)
+#15 1.406 ```
+#15 1.406 import { PrismaClient } from '@prisma/client'
+#15 1.406 const prisma = new PrismaClient()
+#15 1.406 ```
+#15 1.406 or start using Prisma Client at the edge (See: https://pris.ly/d/accelerate)
+#15 1.406 ```
+#15 1.406 import { PrismaClient } from '@prisma/client/edge'
+#15 1.406 const prisma = new PrismaClient()
+#15 1.406 ```
+#15 1.406 
+#15 1.406 See other ways of importing Prisma Client: http://pris.ly/d/importing-client
+#15 1.406 
+#15 1.406 ┌─────────────────────────────────────────────────────────────┐
+#15 1.406 │  Deploying your app to serverless or edge functions?        │
+#15 1.406 │  Try Prisma Accelerate for connection pooling and caching.  │
+#15 1.406 │  https://pris.ly/cli/--accelerate                           │
+#15 1.406 └─────────────────────────────────────────────────────────────┘
+#15 1.406 
+#15 DONE 1.7s
+
+#16 [builder 4/4] RUN bun run build
+#16 0.240 $ next build
+#16 1.518 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#16 1.518 This information is used to shape Next.js' roadmap and prioritize features.
+#16 1.518 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#16 1.518 https://nextjs.org/telemetry
+#16 1.518 
+#16 1.605   ▲ Next.js 14.2.35
+#16 1.605 
+#16 1.635    Creating an optimized production build ...
+#16 27.45 <w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'node-fetch'
+#16 27.47 <w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../../node-fetch' in /app/node_modules/next/dist/compiled/@next/font/dist/google for build dependencies doesn't lead to expected result 'node-fetch', but to 'Error: Can't resolve '../../../../../../../../node-fetch' in '/app/node_modules/next/dist/compiled/@next/font/dist/google'' instead. Resolving dependencies are ignored for this path.
+#16 27.47 <w>  at resolve commonjs file ../../../../../../../../node-fetch (expected node-fetch)
+#16 27.47 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/dist/google/fetch-font-file.js
+#16 27.47 <w>  at file /app/node_modules/next/dist/compiled/@next/font/dist/google/fetch-font-file.js
+#16 27.47 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/dist/google/loader.js
+#16 27.47 <w>  at file /app/node_modules/next/dist/compiled/@next/font/dist/google/loader.js
+#16 27.47 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/google/loader.js
+#16 27.47 <w>  at file /app/node_modules/next/dist/compiled/@next/font/google/loader.js
+#16 27.47 <w>  at file dependencies /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#16 27.47 <w>  at file /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#16 27.47 <w>  at resolve commonjs /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#16 34.56 Browserslist: caniuse-lite is outdated. Please run:
+#16 34.56   npx update-browserslist-db@latest
+#16 34.56   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+#16 44.47 Browserslist: caniuse-lite is outdated. Please run:
+#16 44.47   npx update-browserslist-db@latest
+#16 44.47   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+#16 45.58 <w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'node-fetch'
+#16 45.60 <w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../../node-fetch' in /app/node_modules/next/dist/compiled/@next/font/dist/google for build dependencies doesn't lead to expected result 'node-fetch', but to 'Error: Can't resolve '../../../../../../../../node-fetch' in '/app/node_modules/next/dist/compiled/@next/font/dist/google'' instead. Resolving dependencies are ignored for this path.
+#16 45.60 <w>  at resolve commonjs file ../../../../../../../../node-fetch (expected node-fetch)
+#16 45.60 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/dist/google/fetch-css-from-google-fonts.js
+#16 45.60 <w>  at file /app/node_modules/next/dist/compiled/@next/font/dist/google/fetch-css-from-google-fonts.js
+#16 45.60 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/dist/google/loader.js
+#16 45.60 <w>  at file /app/node_modules/next/dist/compiled/@next/font/dist/google/loader.js
+#16 45.60 <w>  at file dependencies /app/node_modules/next/dist/compiled/@next/font/google/loader.js
+#16 45.60 <w>  at file /app/node_modules/next/dist/compiled/@next/font/google/loader.js
+#16 45.60 <w>  at file dependencies /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#16 45.60 <w>  at file /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#16 45.60 <w>  at resolve commonjs /app/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js
+#16 45.72  ✓ Compiled successfully
+#16 45.74    Linting and checking validity of types ...
+#16 58.40    Collecting page data ...
+#16 60.63    Generating static pages (0/12) ...
+#16 77.26    Generating static pages (3/12) 
+#16 77.26    Generating static pages (6/12) 
+#16 77.27    Generating static pages (9/12) 
+#16 79.28  ✓ Generating static pages (12/12)
+#16 79.96    Finalizing page optimization ...
+#16 79.96    Collecting build traces ...
+#16 80.15 
+#16 80.16 Route (app)                              Size     First Load JS
+#16 80.16 ┌ ƒ /                                    97.6 kB         256 kB
+#16 80.16 ├ ƒ /_not-found                          880 B          88.7 kB
+#16 80.16 ├ ƒ /api/auth/[...nextauth]              0 B                0 B
+#16 80.16 ├ ƒ /api/projects                        0 B                0 B
+#16 80.16 ├ ƒ /api/projects/[id]                   0 B                0 B
+#16 80.16 ├ ƒ /api/users                           0 B                0 B
+#16 80.16 ├ ƒ /api/users/[id]                      0 B                0 B
+#16 80.16 ├ ƒ /auth/signin                         734 B           161 kB
+#16 80.16 ├ ƒ /auth/signout                        376 B           161 kB
+#16 80.16 ├ ƒ /projects                            2.03 kB         161 kB
+#16 80.16 ├ ƒ /projects/[id]                       1.26 kB         180 kB
+#16 80.16 ├ ƒ /projects/edit/[id]                  1.55 kB         302 kB
+#16 80.16 ├ ƒ /projects/new                        1.98 kB         303 kB
+#16 80.16 ├ ƒ /users                               856 B           160 kB
+#16 80.16 ├ ƒ /users/[id]                          1.35 kB         194 kB
+#16 80.16 └ ƒ /users/new                           1.35 kB         194 kB
+#16 80.16 + First Load JS shared by all            87.9 kB
+#16 80.16   ├ chunks/117-e027c137a7e4d283.js       32 kB
+#16 80.16   ├ chunks/fd9d1056-1b5521dfb8c8d0ac.js  53.8 kB
+#16 80.16   └ other shared chunks (total)          2.01 kB
+#16 80.16 
+#16 80.16 
+#16 80.16 ƒ  (Dynamic)  server-rendered on demand
+#16 80.16 
+#16 DONE 80.5s
+
+#17 [runner 2/7] WORKDIR /app
+#17 CACHED
+
+#18 [runner 3/7] RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+#18 CACHED
+
+#19 [runner 4/7] RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+#19 CACHED
+
+#20 [runner 5/7] COPY --from=builder /app/public ./public
+#20 CACHED
+
+#21 [runner 6/7] COPY --from=builder /app/.next/standalone ./
+#21 DONE 0.4s
+
+#22 [runner 7/7] COPY --from=builder /app/.next/static ./.next/static
+#22 DONE 0.1s
+
+#23 exporting to image
+#23 exporting layers
+#23 exporting layers 0.6s done
+#23 writing image sha256:8aa2dd2a91c2a837564a9559a04ac5aac38294b8309d0dec96e1d4411c179e02 done
+#23 naming to docker.io/library/project-management-app:runner done
+#23 DONE 0.6s
+
+=== Memuat image ke node kind
+Image: "project-management-app:builder" with ID "sha256:423e9e3e02cef32451e85c1ca0691c826157623287cbb6d0cd8ead5297597845" not yet present on node "project-management-control-plane", loading...
+Image: "project-management-app:runner" with ID "sha256:8aa2dd2a91c2a837564a9559a04ac5aac38294b8309d0dec96e1d4411c179e02" not yet present on node "project-management-control-plane", loading...
+
+=== Menyiapkan data contoh
+configmap/db-seed created
+
+=== Rilis aplikasi
+Release "app" does not exist. Installing it now.
+NAME: app
+LAST DEPLOYED: Fri Aug 21 14:18:36 2026
+NAMESPACE: project-management
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+Waiting for deployment "app" rollout to finish: 0 of 1 updated replicas are available...
+deployment "app" successfully rolled out
+gateway.gateway.networking.k8s.io/project-management condition met
+
+=== Backup awal
+backup.postgresql.cnpg.io/postgres-backup-manual created
+
+=== Aplikasi terpasang
+NAME    	NAMESPACE         	REVISION	UPDATED                                	STATUS  	CHART         	APP VERSION
+app     	project-management	1       	2026-08-21 14:18:36.709832133 +0700 WIB	deployed	app-0.1.0     	           
+database	project-management	1       	2026-08-21 14:06:13.645681152 +0700 WIB	deployed	database-0.1.0	           
+NAME                 CLASS   ADDRESS      PROGRAMMED   AGE
+project-management   eg      172.18.0.3   True         4m53s
+
+=== 1. helm lint
+  OK    chart database
+  OK    chart app
+
+=== 2. Manifest hasil render diterima API server
+  OK    chart database
+  OK    chart app
+
+=== 3. replicas dan HPA tidak pernah muncul bersamaan
+  OK    autoscaling aktif, replicas dirender (no)
+  OK    autoscaling aktif, HPA dirender (yes)
+  OK    autoscaling mati, replicas dirender (yes)
+  OK    autoscaling mati, HPA dirender (no)
+
+=== 4. helm upgrade mengubah objek yang sudah berjalan
+  OK    permintaan CPU setelah upgrade (150m)
+  OK    permintaan CPU setelah dikembalikan (100m)
+
+=== 5. Mencabut rilis aplikasi tidak menyentuh database
+  acuan: Project=30 Category=5 User=1
+  OK    Deployment aplikasi terhapus
+  OK    Cluster postgres bertahan
+  OK    PersistentVolumeClaim database bertahan (1)
+
+=== Memasang ulang rilis aplikasi
+  OK    jumlah Project setelah dipasang ulang (30)
+  OK    jumlah Category setelah dipasang ulang (5)
+  OK    jumlah User setelah dipasang ulang (1)
+  ... Gateway 172.18.0.3: belum menjawab
+  OK    HTTP lewat Gateway setelah dipasang ulang (200)
+
+=== Ringkasan
+Seluruh pemeriksaan siklus hidup Helm lolos.
+
+=== Namespace argocd
+namespace/argocd created
+
+=== Argo CD Core v3.5.1
+customresourcedefinition.apiextensions.k8s.io/applications.argoproj.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/applicationsets.argoproj.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/appprojects.argoproj.io serverside-applied
+serviceaccount/argocd-application-controller serverside-applied
+serviceaccount/argocd-applicationset-controller serverside-applied
+serviceaccount/argocd-redis serverside-applied
+serviceaccount/argocd-repo-server serverside-applied
+role.rbac.authorization.k8s.io/argocd-application-controller serverside-applied
+role.rbac.authorization.k8s.io/argocd-applicationset-controller serverside-applied
+role.rbac.authorization.k8s.io/argocd-redis serverside-applied
+clusterrole.rbac.authorization.k8s.io/argocd-application-controller serverside-applied
+rolebinding.rbac.authorization.k8s.io/argocd-application-controller serverside-applied
+rolebinding.rbac.authorization.k8s.io/argocd-applicationset-controller serverside-applied
+rolebinding.rbac.authorization.k8s.io/argocd-redis serverside-applied
+clusterrolebinding.rbac.authorization.k8s.io/argocd-application-controller serverside-applied
+configmap/argocd-cm serverside-applied
+configmap/argocd-cmd-params-cm serverside-applied
+configmap/argocd-gpg-keys-cm serverside-applied
+configmap/argocd-rbac-cm serverside-applied
+configmap/argocd-ssh-known-hosts-cm serverside-applied
+configmap/argocd-tls-certs-cm serverside-applied
+secret/argocd-secret serverside-applied
+service/argocd-applicationset-controller serverside-applied
+service/argocd-metrics serverside-applied
+service/argocd-redis serverside-applied
+service/argocd-repo-server serverside-applied
+deployment.apps/argocd-applicationset-controller serverside-applied
+deployment.apps/argocd-redis serverside-applied
+deployment.apps/argocd-repo-server serverside-applied
+statefulset.apps/argocd-application-controller serverside-applied
+networkpolicy.networking.k8s.io/argocd-application-controller-network-policy serverside-applied
+networkpolicy.networking.k8s.io/argocd-applicationset-controller-network-policy serverside-applied
+networkpolicy.networking.k8s.io/argocd-redis-network-policy serverside-applied
+networkpolicy.networking.k8s.io/argocd-repo-server-network-policy serverside-applied
+
+=== Menunggu komponen Argo CD Core siap
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-applicationset-controller-579c4c54b8-7xbcx argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-application-controller-0 argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+  ... belum Ready (4/4 Pod ada): argocd-redis-84497fb7c5-tbmsc argocd-repo-server-5f46d9f598-cks86 
+
+=== AppProject default
+appproject.argoproj.io/default created
+
+=== Kredensial pull image GHCR
+secret/ghcr-pull-secret created
+
+=== Kredensial baca repo project-management
+secret/project-management-repo created
+
+=== Application (single-source, sync otomatis + selfHeal)
+application.argoproj.io/project-management-app created
+
+=== Menunggu Application Synced dan Healthy
+  ... sync=belum ada status health=belum ada status
+  ... sync=belum ada status health=belum ada status
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+  ... sync=Synced health=Progressing
+
+=== Verifikasi: image Pod app berasal dari GHCR, bukan build lokal
+  OK    image app: ghcr.io/qrizan/project-management@sha256:c9850fdff09fb12f10d9cb75519cd329532add9293826cf7ed65ccfdde324400
+
+=== Verifikasi: selfHeal mengembalikan drift manual
+  ... permintaan CPU saat ini: 300m (menunggu kembali ke 100m)
+  ... permintaan CPU saat ini: 300m (menunggu kembali ke 100m)
+  OK    selfHeal mengembalikan drift ke nilai git (yes)
+
+=== Ringkasan
+NAME                     SYNC STATUS   HEALTH STATUS
+project-management-app   Synced        Degraded
+NAME                   READY   STATUS      RESTARTS   AGE
+app-8876c4966-7cvt4    1/1     Running     0          3m3s
+db-seed-n866k          0/1     Completed   0          13s
+postgres-1             2/2     Running     0          41m
+prisma-migrate-9pvbn   0/1     Completed   0          3m11s
+Seluruh pemeriksaan GitOps lolos.
+
+=== Namespace monitoring (privileged, node-exporter butuh hostPath/hostNetwork/hostPID)
+namespace/monitoring created
+
+=== Membuat Secret grafana-admin
+secret/grafana-admin created
+
+=== Menambahkan/memperbarui repo Helm prometheus-community
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "prometheus-community" chart repository
+Update Complete. ⎈Happy Helming!⎈
+
+=== Menyiapkan image kube-prometheus-stack (ditarik satu-satu di host)
+13.1.3: Pulling from grafana/grafana
+Digest: sha256:ab5cb380e3ff3172d6c8bd2e7cfd31cce977d2881b260e1f5bc089bf0b759b43
+Status: Image is up to date for grafana/grafana:13.1.3
+docker.io/grafana/grafana:13.1.3
+Image: "docker.io/grafana/grafana:13.1.3" with ID "sha256:8b5e93ab63f515a9d1d0eea03d99e5896b09074996164c6a500fc713c1d2d451" not yet present on node "project-management-control-plane", loading...
+1.8.5: Pulling from jkroepke/kube-webhook-certgen
+Digest: sha256:d0e80b2f62fe43bb5e1b96adc692132fb4522e802f4cf673c09b1f94722b8cb6
+Status: Image is up to date for ghcr.io/jkroepke/kube-webhook-certgen:1.8.5
+ghcr.io/jkroepke/kube-webhook-certgen:1.8.5
+Image: "ghcr.io/jkroepke/kube-webhook-certgen:1.8.5" with ID "sha256:5687c22ad6d7387acb619bcb51274e6cd3a4a901ed10507eb57c6409164d5ab9" not yet present on node "project-management-control-plane", loading...
+2.10.1: Pulling from kiwigrid/k8s-sidecar
+Digest: sha256:7eac5c4fed714a18d038fc9fea57d8744d113367935dac0ea4eb6a87cef704a3
+Status: Image is up to date for quay.io/kiwigrid/k8s-sidecar:2.10.1
+quay.io/kiwigrid/k8s-sidecar:2.10.1
+Image: "quay.io/kiwigrid/k8s-sidecar:2.10.1" with ID "sha256:e9218c318e57cd8910b6a51dc547763b2ee270a9262670c9e406b6b2b5d15522" not yet present on node "project-management-control-plane", loading...
+v1.12.1-distroless: Pulling from prometheus/node-exporter
+Digest: sha256:8c9bac11973b94b59be88d6e11fee4429aa743c8846cdc75d65b18db33f6a106
+Status: Image is up to date for quay.io/prometheus/node-exporter:v1.12.1-distroless
+quay.io/prometheus/node-exporter:v1.12.1-distroless
+Image: "quay.io/prometheus/node-exporter:v1.12.1-distroless" with ID "sha256:6ce127b25a483f9181abc5205a5967b65427ec43f0aa38eb69c5768db42ca634" not yet present on node "project-management-control-plane", loading...
+v0.93.0: Pulling from prometheus-operator/prometheus-operator
+Digest: sha256:a001ed10a3823bbf2410ea347796d0e35ff8decd24fb98acbe7ab9e98d431c39
+Status: Image is up to date for quay.io/prometheus-operator/prometheus-operator:v0.93.0
+quay.io/prometheus-operator/prometheus-operator:v0.93.0
+Image: "quay.io/prometheus-operator/prometheus-operator:v0.93.0" with ID "sha256:ad0ef7d65f15a346524e2e682e6a830ef8eafbf5d0ec212fdcdb98b06cd72972" not yet present on node "project-management-control-plane", loading...
+v2.19.1: Pulling from kube-state-metrics/kube-state-metrics
+Digest: sha256:85108987d044b18a098126732f98602df408888c0f7d456241f5abefb9744bc1
+Status: Image is up to date for registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.19.1
+registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.19.1
+Image: "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.19.1" with ID "sha256:f98b74d053919748c3768fb4204c948bd1819707230510e7283c301ed7813557" not yet present on node "project-management-control-plane", loading...
+
+=== kube-prometheus-stack 88.3.0
+Release "kube-prometheus-stack" does not exist. Installing it now.
+NAME: kube-prometheus-stack
+LAST DEPLOYED: Fri Aug 21 14:50:41 2026
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=kube-prometheus-stack"
+
+Get Grafana 'admin' user password by running:
+
+  kubectl --namespace monitoring get secrets kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+Access Grafana local instance:
+
+  export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=kube-prometheus-stack" -oname)
+  kubectl --namespace monitoring port-forward $POD_NAME 3000
+
+Get your grafana admin user password by running:
+
+  kubectl get secret --namespace monitoring -l app.kubernetes.io/component=admin-secret -o jsonpath="{.items[0].data.admin-password}" | base64 --decode ; echo
+
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+
+=== Menunggu seluruh Pod monitoring siap
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 kube-prometheus-stack-grafana-56f4b49f58-9qv7w kube-prometheus-stack-kube-state-metrics-5cd8d9cc47-7wv7l prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 kube-prometheus-stack-grafana-56f4b49f58-9qv7w prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): alertmanager-kube-prometheus-stack-alertmanager-0 prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+  ... belum Ready (6/6 Pod ada): prometheus-kube-prometheus-stack-prometheus-0 
+
+=== Menyinkronkan ulang rilis database (PodMonitor, CRD-nya baru sekarang ada)
+Release "database" has been upgraded. Happy Helming!
+NAME: database
+LAST DEPLOYED: Fri Aug 21 15:09:07 2026
+NAMESPACE: project-management
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+
+=== Dashboard Grafana CNPG
+configmap/cnpg-grafana-dashboard serverside-applied
+
+=== Monitoring terpasang
+NAME                 	NAMESPACE 	REVISION	UPDATED                                	STATUS  	CHART                       	APP VERSION
+kube-prometheus-stack	monitoring	1       	2026-08-21 14:50:41.079196681 +0700 WIB	deployed	kube-prometheus-stack-88.3.0	v0.93.0    
+NAME                                                        READY   STATUS    RESTARTS   AGE
+alertmanager-kube-prometheus-stack-alertmanager-0           2/2     Running   0          18m
+kube-prometheus-stack-grafana-56f4b49f58-9qv7w              3/3     Running   0          18m
+kube-prometheus-stack-kube-state-metrics-5cd8d9cc47-7wv7l   1/1     Running   0          18m
+kube-prometheus-stack-operator-6cd468bd58-bjxfq             1/1     Running   0          18m
+kube-prometheus-stack-prometheus-node-exporter-ksdsw        1/1     Running   0          18m
+prometheus-kube-prometheus-stack-prometheus-0               2/2     Running   0          18m
+
+=== Menerapkan PrometheusRule app-restart-demo
+prometheusrule.monitoring.coreos.com/app-restart-demo created
+
+=== Menunggu Prometheus siap dijangkau lewat port-forward
+
+=== Menunggu Prometheus men-scrape restart count aplikasi
+
+=== Memaksa container app restart
+
+=== Menunggu alert AppPodRestartingDemo firing (sampai 5 menit)
+Alert AppPodRestartingDemo firing, terbukti.
+
+=== Menunggu Prometheus siap dijangkau lewat port-forward
+
+=== Mengukur baseline cnpg_backends_total sebelum drill
+Baseline: 1 koneksi
+
+=== Membuka 70 koneksi ke Postgres lewat Job
+
+=== Menunggu cnpg_backends_total naik ke atas 60
+cnpg_backends_total naik dari 1 ke 71 (ambang 60), terbukti.
+
+=== 1. Seluruh Pod berjalan dan siap
+  OK    namespace project-management (7 Pod)
+  OK    namespace garage (1 Pod)
+
+=== 2. Pod Security restricted ditegakkan
+  OK    enforce di namespace project-management (restricted)
+  OK    enforce di namespace garage (restricted)
+
+=== 3. Aplikasi dapat dijangkau lewat Gateway
+  OK    HTTP /auth/signin lewat Gateway (200)
+
+=== 4. metrics-server mengeluarkan angka
+  OK    kubectl top pods
+
+=== 5. HPA membaca metrik
+  OK    HPA membaca utilisasi CPU (11%)
+
+=== 6. Data hasil seed
+  OK    jumlah Project (30)
+  OK    jumlah Category (5)
+  OK    jumlah User (1)
+
+=== 7. Aturan masuk Postgres memblokir klien yang tidak diizinkan
+  OK    koneksi dari luar daftar klien diblokir
+
+=== 8. WAL archiving berjalan
+  OK    condition ContinuousArchiving (True)
+
+=== 9. Backup selesai
+  OK    Backup postgres-backup-manual completed
+
+=== 10. Pod tanpa penanda klien tidak bisa menjangkau database
+  OK    koneksi ke database dari Pod tanpa penanda klien diblokir
+
+=== 11. Namespace monitoring privileged (node-exporter, dikecualikan dari restricted)
+  OK    enforce di namespace monitoring (privileged)
+
+=== 12. Prometheus men-scrape target di namespace aplikasi
+  OK    cAdvisor melaporkan memory Pod di namespace project-management
+
+=== 13. Dashboard Grafana tersedia
+  OK    Grafana punya dashboard yang cocok kata kunci 'pod'
+
+=== 14. Prometheus men-scrape target CNPG (PodMonitor)
+  OK    target CNPG PodMonitor berstatus up
+
+=== 15. Dashboard Grafana CloudNativePG tersedia
+  OK    Dashboard CloudNativePG (uid cloudnative-pg) ditemukan
+
+=== Ringkasan
+Seluruh pemeriksaan cepat lolos.
+Uji restore belum termasuk di sini, jalankan 60-restore-drill.sh.
+
+=== Membersihkan sisa uji sebelumnya
+
+=== Mencatat acuan dari cluster sumber
+  Project: 30
+  Category: 5
+  User: 1
+
+=== Membuat Cluster dari backup
+  ... postgres-restore-test: menunggu status
+  ... postgres-restore-test: Setting up primary
+  ... postgres-restore-test: Setting up primary
+
+=== Membandingkan isi dengan acuan
+  OK    Project (30)
+  OK    Category (5)
+  OK    User (1)
+
+=== Ringkasan
+Uji restore lolos.

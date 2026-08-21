@@ -47,10 +47,8 @@ ARCHITECTURE.INTERNAL.md
 DECISION.INTERNAL.md
 SECURITY.INTERNAL.md
 DEVELOPMENT.INTERNAL.md
+MONITORING.INTERNAL.md
 LESSON.md
 
 # docker
 docker-compose.override.yml
-
-# output
-scripts/reproduce/output*.txt

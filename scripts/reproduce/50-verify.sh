@@ -213,6 +213,40 @@ else
   bad "Grafana tidak punya dashboard yang cocok kata kunci 'pod', atau tidak bisa dihubungi"
 fi
 
+# Diperiksa lewat metrik `up` Prometheus sendiri, bukan metrik data CNPG:
+# metrik data bisa saja masih menyimpan sampel lama walau scrape saat ini
+# sedang gagal, `up` mencerminkan hasil scrape yang paling baru.
+log "14. Prometheus men-scrape target CNPG (PodMonitor)"
+prom_query_up() {
+  curl -fsS --max-time 10 -G \
+    --data-urlencode "query=$1" \
+    "http://127.0.0.1:19090/api/v1/query" | grep -q '"value":\[[0-9.]*,"1"\]'
+}
+if [ -z "${prom_svc}" ]; then
+  bad "Service Prometheus tidak ditemukan di namespace ${MONITORING_NAMESPACE}"
+elif with_port_forward "${MONITORING_NAMESPACE}" "${prom_svc}" 19090 9090 \
+       prom_query_up "up{namespace=\"${APP_NAMESPACE}\", pod=~\"^postgres-.*\"}"; then
+  pass "target CNPG PodMonitor berstatus up"
+else
+  bad "target CNPG PodMonitor tidak berstatus up (scrape gagal atau target tidak ditemukan)"
+fi
+
+# Diambil lewat uid, bukan pencarian kata kunci seperti check 13: kata kunci
+# generik juga bisa cocok ke dashboard bawaan chart lain, uid membuktikan
+# dashboard CNPG spesifik ini yang ada.
+log "15. Dashboard Grafana CloudNativePG tersedia"
+grafana_cnpg_query() {
+  curl -fsS --max-time 10 -u "${grafana_user}:${grafana_pass}" \
+    "http://127.0.0.1:19300/api/dashboards/uid/cloudnative-pg" | grep -q '"title":"CloudNativePG"'
+}
+if [ -z "${grafana_svc}" ] || [ -z "${grafana_user}" ]; then
+  bad "Service atau kredensial Grafana tidak ditemukan di namespace ${MONITORING_NAMESPACE}"
+elif with_port_forward "${MONITORING_NAMESPACE}" "${grafana_svc}" 19300 80 grafana_cnpg_query; then
+  pass "Dashboard CloudNativePG (uid cloudnative-pg) ditemukan"
+else
+  bad "Dashboard CloudNativePG (uid cloudnative-pg) tidak ditemukan lewat API Grafana"
+fi
+
 log "Ringkasan"
 if [ "${FAILED}" -eq 0 ]; then
   echo "Seluruh pemeriksaan cepat lolos."
